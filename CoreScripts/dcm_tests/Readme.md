@@ -17,5 +17,5 @@ https://imebra.com/get-it/
 
 ## Comments:
 
-Directly rendering pixels greyscale/illuminance loaded from Imebra using python's scipy/misc does not work quite well. See test.py for detail
+Directly rendering pixels greyscale/illuminance loaded from Imebra using python's scipy/misc does not work quite well. See **test.py** for detail. Run it using python3
 
