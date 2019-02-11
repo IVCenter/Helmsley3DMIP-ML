@@ -1,5 +1,7 @@
 # A git ignore for python
 
+.DS_Store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
