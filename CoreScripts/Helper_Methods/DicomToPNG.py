@@ -22,11 +22,18 @@ if len(all_dcms) == 0:
 	print ("No dcm files found")
 	exit()
 
-print ("Started converting...")
+print(" [ Found " + str(len(all_dcms)) + " images... ]")
+print(" [ Started converting... ]")
+print(' ', end='')
 print('[', end='')
+
+curr_progress = 0
+prev_progress = 0
 
 for dcm in all_dcms:
 	
+	curr_progress = dcm_count * 1.0 / len(all_dcms)
+
 	dcm_path = input_folder_path + "/" + dcm
 
 	ds = pydicom.dcmread(dcm_path)
@@ -50,6 +57,9 @@ for dcm in all_dcms:
 		w.write(png_file, image_2d_scaled)
 
 	dcm_count += 1
-	print('=', end='')
 
-print ("]\n Done! Converted "+ str(dcm_count) + " images")
+	if curr_progress - prev_progress > 0.02:
+		print('=', end='')
+		prev_progress = curr_progress
+
+print ("]\n [ Done! Converted "+ str(dcm_count) + " images ]")
