@@ -14,7 +14,10 @@ from os.path import isfile, join
 input_folder_path = "./ToConvert"
 output_folder_path = "./Converted"
 
-all_dcms = [f for f in listdir(input_folder_path) if isfile(join(input_folder_path,f)) if f.endswith(".dcm")]
+# all_dcms = [f for f in listdir(input_folder_path) if isfile(join(input_folder_path,f)) if f.endswith(".dcm")]
+all_dcms = [pydicom.read_file(input_folder_path + '/' + f) for f in listdir(input_folder_path) if isfile(join(input_folder_path,f)) if f.endswith(".dcm")]
+
+all_dcms.sort(key = lambda x: int(x[0x20, 0x32][1]))
 
 dcm_count = 0
 
@@ -34,9 +37,8 @@ for dcm in all_dcms:
 	
 	curr_progress = dcm_count * 1.0 / len(all_dcms)
 
-	dcm_path = input_folder_path + "/" + dcm
-
-	ds = pydicom.dcmread(dcm_path)
+	# dcm_path = input_folder_path + "/" + dcm
+	ds = dcm
 
 	shape = ds.pixel_array.shape
 
@@ -63,3 +65,12 @@ for dcm in all_dcms:
 		prev_progress = curr_progress
 
 print ("]\n [ Done! Converted "+ str(dcm_count) + " images ]")
+
+
+
+
+
+
+
+
+
