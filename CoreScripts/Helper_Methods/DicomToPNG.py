@@ -25,10 +25,10 @@ if len(all_dcms) == 0:
 	print ("No dcm files found")
 	exit()
 
-print(" [ Found " + str(len(all_dcms)) + " images... ]")
-print(" [ Started converting... ]")
-print(' ', end='')
-print('[', end='')
+# print(" [ Found " + str(len(all_dcms)) + " images... ]")
+# print(" [ Started converting... ]")
+# print(' ', end='')
+# print('[', end='')
 
 curr_progress = 0
 prev_progress = 0
@@ -61,10 +61,10 @@ for dcm in all_dcms:
 	dcm_count += 1
 
 	if curr_progress - prev_progress > 0.02:
-		print('=', end='')
+		# print('=', end='')
 		prev_progress = curr_progress
 
-print ("]\n [ Done! Converted "+ str(dcm_count) + " images ]")
+print ("\n [ Done! Converted "+ str(dcm_count) + " images ]")
 
 
 
