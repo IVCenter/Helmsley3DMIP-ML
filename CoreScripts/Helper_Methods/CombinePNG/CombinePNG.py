@@ -1,6 +1,9 @@
 ##
 ## Author: Wanze (Russell) Xie
 ##
+## To use this script, you must put the images to combine in the "ToConvert" folder
+## You must also create a "Result" folder, where all the output images will be at
+##
 
 import cv2
 import numpy as np
