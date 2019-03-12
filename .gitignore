@@ -3,7 +3,7 @@
 .DS_Store
 
 # Saved Keras Model, Too large for github
-Examples/unet-master/*.hdf5
+*.hdf5
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
