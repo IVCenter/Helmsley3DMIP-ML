@@ -10,4 +10,5 @@ A repo for 3D medical MRI/CT image visualization and organ (colon) segmentation 
 
 ## Quick Reference:
 
-under construction...
+* All the raw and processed data include the png/dicom segmented masks and nrrd files for 3D slicer (data for training): https://drive.google.com/drive/u/2/folders/130arK9MAYJD8Pq-1-6TU2y9fOTO5rJ5n
+* Saved models: https://drive.google.com/drive/u/2/folders/1IM0TxECQgww1rflAW-mgwIhlyKa5Qbw3
