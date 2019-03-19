@@ -40,7 +40,7 @@ A repo for 3D medical MRI/CT image visualization and organ (colon) segmentation 
 * [2012 Combined]()
 * [2016 Combined](https://drive.google.com/drive/u/1/folders/1zibkm0_HktcdjGxqnA6h6jTfjK6qwb4_)
 * [2017 Combined]()
-* [Selected 25 Images Combined]()
+* [Selected 25 Images Combined](https://drive.google.com/drive/u/1/folders/1zNEMqfPvCgKSDwcj-tUs9JD6uhPcTAVz)
 
 #### nrrd Files for 3D Slicer
 * [nrrd](https://drive.google.com/drive/u/1/folders/1U2Krl-tfqSd0kjTMWnLRWDKztoHZ3goP)
@@ -59,10 +59,10 @@ A repo for 3D medical MRI/CT image visualization and organ (colon) segmentation 
 
 ## Built With
 
-* [Pickle]()
+* [Pickle](https://docs.python.org/3/library/pickle.html)
 * [Python 2.7](https://www.python.org/)
 * [OpenCV](https://opencv.org/)
-* [PyDicom]()
+* [PyDicom](https://pydicom.github.io/pydicom/stable/index.html)
 * [Keras with Tensorflow Kernel]()
 
 
