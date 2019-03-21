@@ -1,7 +1,29 @@
+import sys
+import os
 
+verbose = 1
 
-from model import *
-from data import *
+def DebugLog(output_string):
+	if verbose == 1:
+		print ("(DebugLog): " + output_string)
+
+if len(sys.argv) != 3 and len(sys.argv) != 4:
+	print ("ERROR: \n **You have to give two or three command line arguments** \n" + 
+		" First arg: input folder that contains your dicom images \n" + 
+		" Second arg: output folder for the predicted PNG masks \n" + 
+		" Third arg (optional): the path to the other U-Net Model you" + 
+		" want to use for prediction.\n (default is unet_colon.hdf5, make sure you have it in this directory)\n")
+	exit()
+
+filename = str(sys.argv[0])
+path_to_the_dicom_images = str(sys.argv[1])
+path_to_the_final_output_folder = str(sys.argv[2])
+
+if len(sys.argv) == 4:
+	path_to_the_hdf5_model = str(sys.argv[3])
+else:
+	path_to_the_hdf5_model = "unet_colon.hdf5"
+
 
 
 # read over the directory, count the number of files.  
@@ -10,23 +32,17 @@ from data import *
 # save as numpy array makes better  
 # run python on the same heap-space.  
 
-# default param
-path_to_the_mri_images = "MRI_Images"
-path_to_the_model = "unet_colon.hdf5"
-path_to_the_output_folder = "output"
-number_of_images = 9
-
-
-
 
 ################################ Conversion ########################
+DebugLog ("Importing resources for converting images...")
 import numpy as np
 import png
 import pydicom
 from os import listdir
 from os.path import isfile, join
 
-input_folder_path = "./ToConvert"
+os.system("mkdir ./Converted")
+input_folder_path = path_to_the_dicom_images
 output_folder_path = "./Converted"
 
 # all_dcms = [f for f in listdir(input_folder_path) if isfile(join(input_folder_path,f)) if f.endswith(".dcm")]
@@ -37,7 +53,7 @@ all_dcms.sort(key = lambda x: int(x[0x20, 0x32][1]))
 dcm_count = 0
 
 if len(all_dcms) == 0:
-	print ("No dcm files found")
+	DebugLog ("Error: No dcm files found")
 	exit()
 
 # print(" [ Found " + str(len(all_dcms)) + " images... ]")
@@ -47,6 +63,10 @@ if len(all_dcms) == 0:
 
 curr_progress = 0
 prev_progress = 0
+
+DebugLog ("Started converting dicom to PNGs ...")
+sys.stdout.write("Progress: [")
+sys.stdout.flush()
 
 for dcm in all_dcms:
 	
@@ -76,14 +96,44 @@ for dcm in all_dcms:
 	dcm_count += 1
 
 	if curr_progress - prev_progress > 0.02:
-		# print('=', end='')
+		sys.stdout.write("=")
+		sys.stdout.flush()
 		prev_progress = curr_progress
 
-print ("\n [ Done! Converted "+ str(dcm_count) + " images ]")
+sys.stdout.write("]\n")
+sys.stdout.flush()
+DebugLog (" [ Done! Converted "+ str(dcm_count) + " images ]")
+DebugLog ("converted PNGs saved to " + output_folder_path)
+
+#******************************************************************#
+
+# retrieve the number of images
+number_of_dicoms = len(all_dcms)
+
+################################ Prediction ########################
+
+DebugLog ("Importing resources for prediction")
+from model import *
+from data import *
+DebugLog ("predicting masks....")
+
+path_to_the_mri_images = output_folder_path
+path_to_the_model = path_to_the_hdf5_model
+path_to_the_output_folder = path_to_the_final_output_folder
+number_of_images = number_of_dicoms
+
+testGene = testGenerator(path_to_the_mri_images, num_image=number_of_images)
+model = unet()
+model.load_weights(path_to_the_model)
+results = model.predict_generator(testGene,number_of_images,verbose=1)
+saveResult(path_to_the_output_folder,results) 
+
+DebugLog ("Cleaning temp folders")
+os.system("rm -rf ./Converted")
+
+DebugLog ("\n\tCompleted!")
 
 
 
 
 
-
-#####################################################################
