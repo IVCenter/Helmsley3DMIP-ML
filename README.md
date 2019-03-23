@@ -6,6 +6,7 @@ A repo for 3D medical MRI/CT image visualization and organ (colon) segmentation 
 
 * [Google Drive Folder with the Assets for Training](https://drive.google.com/drive/folders/1AunUYgQ-9ka_B1l2Z9-GuUamAn2uUq7t?usp=sharing)
 * [The Paper for Submission to MICCAI 2019 Conference](https://github.com/RussellXie7/MICCAI_paper)
+* [The Draft of the Paper](https://docs.google.com/document/d/16d-X6lfZZc0LoPJfryGSZ4GqFKdjigIY51ZcC7QM45A/edit?usp=sharing)
 * [Our Collective Doc about Working with Nautilus Clusters using Kubernetes](https://docs.google.com/document/d/1wqA_Z3cJzHDX2bTvzgSnVFPjCa8qKwpf5X6XLIMTaA8/edit?usp=sharing)
 * [Presentation Slides](https://docs.google.com/presentation/d/16SVB5gvhoe-OGjmxUGqrrv-eT7HzAeizTpWoNYDJ4K8/edit?usp=sharing)
 
