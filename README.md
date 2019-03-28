@@ -4,7 +4,7 @@ A repo for 3D medical MRI/CT image visualization and organ (colon) segmentation 
 
 ## Quick Access to Relevant Components of this Project
 
-* [Google Drive Folder with the Assets for Training](https://drive.google.com/drive/folders/1AunUYgQ-9ka_B1l2Z9-GuUamAn2uUq7t?usp=sharing)
+* [The Google Drive Folder](https://drive.google.com/drive/folders/1AunUYgQ-9ka_B1l2Z9-GuUamAn2uUq7t?usp=sharing)
 * [The Repo of the Paper for Submission to MICCAI 2019 Conference](https://github.com/RussellXie7/MICCAI_paper)
 * [The Draft of the Paper](https://docs.google.com/document/d/16d-X6lfZZc0LoPJfryGSZ4GqFKdjigIY51ZcC7QM45A/edit?usp=sharing)
 * [The Overleaf Docs for the Paper](https://www.overleaf.com/4492563319trcchxtphgrw)
