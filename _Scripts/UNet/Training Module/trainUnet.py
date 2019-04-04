@@ -39,27 +39,17 @@ data_gen_args = dict(rotation_range=0.2,
 
 save_path = save_folder + '/' + model_name + '.hdf5'
 
-myGene = trainGenerator(2,'Datasets',
-						image_folder,
-						label_folder,
-						data_gen_args,
-						save_to_dir = None)
+myGene = trainGenerator(2,'Datasets',image_folder,label_folder,data_gen_args,save_to_dir = None)
 
 model = unet()
 # model = unet_lrelu()
 
-model_checkpoint = ModelCheckpoint(save_path, 
-								monitor='loss',
-								verbose=1, 
-								save_best_only=True)
+model_checkpoint = ModelCheckpoint(save_path, monitor='loss',verbose=1, save_best_only=True)
 
 '''
 The training starts here.
 '''
-model.fit_generator(myGene,
-					steps_per_epoch=20000,
-					epochs=5,
-					callbacks=[model_checkpoint])
+model.fit_generator(myGene,steps_per_epoch=20000,epochs=5,callbacks=[model_checkpoint])
 
 
 
