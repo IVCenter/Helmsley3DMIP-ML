@@ -1,4 +1,5 @@
 import os
+import sys
 
 if len(sys.argv) != 3:
 	print ("ERROR: \n **You have to give two command line arguments** \n" + 
@@ -29,15 +30,19 @@ input_folder = os.path.basename(os.path.normpath(input_path))
 output_folder = input_folder + time_stamp
 output_path = './Tests/' + output_folder
 
+num_images = len([name for name in os.listdir(input_path) if os.path.isfile(os.path.join(input_path,name))])
+
+# print ("num_images = " + str(num_images))
+
 path_to_the_hdf5_model = str(sys.argv[2])
 
 '''
 Run the Test scripts
 '''
-testGene = testGenerator(input_folder)
+testGene = testGenerator(input_path,num_images)
 model = unet()
 model.load_weights(path_to_the_hdf5_model)
-results = model.predict_generator(testGene,5,verbose=1)
+results = model.predict_generator(testGene,num_images,verbose=1)
 
 '''
 Save the results

@@ -10,6 +10,12 @@ from keras.callbacks import ModelCheckpoint, LearningRateScheduler
 from keras import backend as keras
 from keras.layers import LeakyReLU
 
+from keras.utils.training_utils import multi_gpu_model
+import tensorflow as tf
+
+# This is the number of GPU you want to use
+G = 2
+
 
 def unet(pretrained_weights = None,input_size = (256,256,1)):
     inputs = Input(input_size)
@@ -130,15 +136,29 @@ def unet_lrelu(pretrained_weights = None,input_size = (256,256,1)):
     
     conv10 = Conv2D(1, 1, activation = 'sigmoid')(conv9)
 
-    model = Model(input = inputs, output = conv10)
+#     model = Model(input = inputs, output = conv10)
 
-    model.compile(optimizer = Adam(lr = 1e-4), loss = 'binary_crossentropy', metrics = ['accuracy'])
+#     model.compile(optimizer = Adam(lr = 1e-4), loss = 'binary_crossentropy', metrics = ['accuracy'])
     
-    #model.summary()
+#     #model.summary()
+
+    if G <= 1:
+        print ("[INFO] training with 1 GPU")
+        model = Model(input = inputs, output = conv10)
+    else:
+        print ("[INFO] training with {} GPUs...".format(G))
+        
+        with tf.device("/cpu:0"):
+            model = Model(input = inputs, output = conv10)
+        
+        model = multi_gpu_model(model, gpus=G)
+    
+    model.compile(optimizer = Adam(lr = 1e-4), loss = 'binary_crossentropy', metrics = ['accuracy'])
 
     if(pretrained_weights):
-    	model.load_weights(pretrained_weights)
-
+        model.load_weights(pretrained_weights)
+        
     return model
+
 
 
