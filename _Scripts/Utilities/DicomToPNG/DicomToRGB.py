@@ -21,6 +21,11 @@ all_dcms = [pydicom.read_file(input_folder_path + '/' + f) for f in listdir(inpu
 all_dcms.sort(key = lambda x: int(x[0x20, 0x32][1]))
 
 all_depth = [x[0x20, 0x32][1] for x in all_dcms]
+print(max(all_depth), min(all_depth))
+min_depth = -200
+max_depth = 200
+normalized_depth = [(x - min_depth)/(max_depth - min_depth)*255 for x in all_depth]
+print(max(normalized_depth), min(normalized_depth))
 #print(all_depth)
 
 dcm_count = 0
@@ -37,7 +42,7 @@ if len(all_dcms) == 0:
 curr_progress = 0
 prev_progress = 0
 
-for (dcm, depth) in zip(all_dcms, all_depth):
+for (dcm, depth) in zip(all_dcms, normalized_depth):
 
     curr_progress = dcm_count * 1.0 / len(all_dcms)
 
@@ -77,18 +82,3 @@ for (dcm, depth) in zip(all_dcms, all_depth):
         prev_progress = curr_progress
 
 print ("\n [ Done! Converted "+ str(dcm_count) + " images ]")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
