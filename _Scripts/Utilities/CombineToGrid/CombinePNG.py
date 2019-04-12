@@ -120,6 +120,7 @@ if isImageFromTrainingData == 1:
 else:
 	raw_images, mask_images = load_predicted_images_from_folder()
 
+# print (str(len(mask_images)) + " number of mask images")
 
 converted_count = 0
 curr_progress = 0

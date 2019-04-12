@@ -33,7 +33,7 @@ if len(all_dcms) == 0:
 curr_progress = 0
 prev_progress = 0
 
-for dcm in all_dcms:
+for dcm in all_dcms[:1]:
 	
 	curr_progress = dcm_count * 1.0 / len(all_dcms)
 
@@ -41,6 +41,7 @@ for dcm in all_dcms:
 	ds = dcm
 
 	shape = ds.pixel_array.shape
+
 
 	# Convert to float to avoid overflow or underflow losses.
 	image_2d = ds.pixel_array.astype(float)
