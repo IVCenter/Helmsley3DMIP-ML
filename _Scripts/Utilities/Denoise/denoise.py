@@ -18,6 +18,9 @@ from denoise_param import *
 # denoise parameters
 from itkwidgets import view
 
+h_size = 0
+numb_layers = 0
+
 def make_graph(numpy_hist, radius = 3, layer_interval = 1):
     print('making graph based on 3d-histogram')
     def valid_idx(tuple, shape):            
@@ -104,10 +107,21 @@ def getNumpyMasks(pathname):
         fnames.extend(filename)
 
         numbers = []
-        for fname in fnames:
-            numbers.append(reg.findall(r'\d+', fname)[0])
+        fname_to_number = {}
 
-        fname_to_number = dict(zip(fnames,numbers))
+        to_delete = []
+        for fname in fnames:
+            if(len(reg.findall(r'\d+', fname)) > 0):
+                numbers.append(reg.findall(r'\d+', fname)[0])
+                fname_to_number[fname] = reg.findall(r'\d+', fname)[0]
+            else:
+                print("Found weird file and ignored: " + str(fname))
+                to_delete.append(fname)
+
+        for ddd in to_delete:
+            del fnames[fnames.index(ddd)]
+
+        # fname_to_number = dict(zip(fnames,numbers))
         fnames.sort(key = lambda fname : int(fname_to_number[fname]))
 
     # reading and converting png file to one numpy slice
@@ -120,10 +134,14 @@ def getNumpyMasks(pathname):
 
 def gen3DHistogram(numpy_masks, texel_threshold = 30):
     print('generating 3d histogram')
+    
+    global h_size
+    global numb_layers
+    
     # size for the histogram
-    h_size = 32
+    h_size = 64
     # grid size in terms of pixel (as 256 / 32 = 8)
-    unit_size = 8
+    unit_size = 4
     
     # number of layers for the masks
     numb_layers = numpy_masks.shape[0]
@@ -150,12 +168,14 @@ def gen3DHistogram(numpy_masks, texel_threshold = 30):
     histogram[np.where(histogram <= texel_threshold)] = 0 
     histogram[np.where(histogram > texel_threshold)] = 1
 
+    print ( "Number of 1s in histogram: " + str(histogram.sum()))
+
     return histogram.astype('uint8')
 
 
 def make_filter(master_vert, hist):
     print('making a filter using master tree')
-    a_filter = np.zeros((116, 32, 32)).astype('uint8')
+    a_filter = np.zeros((numb_layers, h_size, h_size)).astype('uint8')
     for vert in master_vert:
         a_filter[vert] = 1
     print(a_filter.sum())
