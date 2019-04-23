@@ -33,12 +33,12 @@ def transform_point_inverse(point, target_p, tangent_vector):
 	tangent_vector = normalize(tangent_vector)
 
 	v = tangent_vector
-	u = np.array(-v[1],v[0])
-
+	u = np.array([-v[1],v[0]])
+	#print("[Debug:] v:",v," u:",u)    
 	# v is the new x axis, and u is the new y axis
 	rotation_matrix = np.array([v, u])
-
-	return (np.matmul(np.linalg.inv(rotation_matrix), point) + target_p)
+	#print("[Debug:]",rotation_matrix,point)    
+	return (np.linalg.inv(rotation_matrix).dot(point) + target_p)
 
 
 #
@@ -53,7 +53,7 @@ def transform_coordinate_system(coords_list, target_p, tangent_vector, inverse=0
 	tangent_vector = normalize(tangent_vector)
 		
 	v = tangent_vector
-	u = np.array(-v[1],v[0])
+	u = np.array([-v[1],v[0]])
 	assert len(v) == 2, "The len of v should be 2"
 
 	# v is the new x axis, and u is the new y axis
@@ -64,7 +64,7 @@ def transform_coordinate_system(coords_list, target_p, tangent_vector, inverse=0
 			(np.matmul(np.linalg.inv(rotation_matrix), np.array([x,y])) + target_p) for (x,y) in coords_list])
 	
 	return np.array([
-		np.matmul(rotation_matrix, np.array([x,y]) - target_p) for (x,y) in coords_list])
+		rotation_matrix.dot(np.array([x,y]) - target_p) for (x,y) in coords_list])
 
 
 #
@@ -186,7 +186,7 @@ def Moving_Least_Square(target_p, neighbor_points):
 
 	# find the largest distance as H and get the weights array
 	H = np.amax(dists)
-	print("[MLS]: Found the maximal distance: ", H)
+	#print("[MLS]: Found the maximal distance: ", H)
 
 	weights = np.array([calc_weight(r,H) for r in dists])
 	# sanity check
@@ -194,9 +194,9 @@ def Moving_Least_Square(target_p, neighbor_points):
 
 	# initialize two the a and b for y = ax+b and find result
 	beta_init = np.random.rand(2)
-	result = minimize(objective_function_linear, beta_init, args=(X,Y,weights), methods='Nelder-Mead')
+	result = minimize(objective_function_linear, beta_init, args=(X,Y,weights), method='Nelder-Mead')
 	beta_hat = result.x
-	print("[MLS]: Finding the linear regression is successful: ", result.success, " and a and b is: ", beta_hat)
+	#print("[MLS]: Finding the linear regression is successful: ", result.success, " and a and b is: ", beta_hat)
 
 
 	'''
@@ -205,7 +205,7 @@ def Moving_Least_Square(target_p, neighbor_points):
 	target_p = np.array(target_p)
 	# randomly pick a point vector that is (1, a+b), where a and b are the obtained linear function
 	tangent_vector = np.array([1, beta_hat[0]+beta_hat[1]])
-	print("[MLS]: Tangent vector for target p is: ", tangent_vector)
+	#print("[MLS]: Tangent vector for target p is: ", tangent_vector)
 	#transform the entire point sets
 	transformed_neighbor_points = transform_coordinate_system(neighbor_points, target_p, tangent_vector)
 
@@ -218,9 +218,9 @@ def Moving_Least_Square(target_p, neighbor_points):
 
 	#initialize three the a, b and c for y = ax^2 + bx + c
 	beta_init_ = np.random.rand(3)
-	result_ = minimize(objective_function_square, beta_init_, args=(X_,Y_,weights), methods='Nelder-Mead')
+	result_ = minimize(objective_function_square, beta_init_, args=(X_,Y_,weights), method='Nelder-Mead')
 	beta_hat_ = result_.x
-	print("[MLS]: Finding the quadratic regression is successful: ", result_.success, " and a, b, and c is: ", beta_hat_)
+	#print("[MLS]: Finding the quadratic regression is successful: ", result_.success, " and a, b, and c is: ", beta_hat_)
 
 
 	'''
