@@ -33,8 +33,7 @@ def transform_point_inverse(point, target_p, tangent_vector):
 	tangent_vector = normalize(tangent_vector)
 
 	v = tangent_vector
-	u = np.array([-v[1],v[0]])
-	#print("[Debug:] v:",v," u:",u)    
+	u = np.array([-v[1],v[0]]) 
 	# v is the new x axis, and u is the new y axis
 	rotation_matrix = np.array([v, u])
 	#print("[Debug:]",rotation_matrix,point)    
@@ -172,7 +171,7 @@ def objective_function_square(beta, X, Y, weights):
 #
 # Return: return an array with two elements [x,y] to represent the coordinate after moving
 #
-def Moving_Least_Square(target_p, neighbor_points):
+def Moving_Least_Square(target_p, neighbor_points, verbose=0):
 
 	'''
 	Find Local Regression Line
