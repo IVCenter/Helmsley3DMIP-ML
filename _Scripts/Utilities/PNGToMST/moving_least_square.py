@@ -20,6 +20,8 @@ def normalize(v):
 	return v / norm
 
 def calc_weight(r, H):
+	if r < 0.001 or H < 0.01:
+		return 1
 	return np.exp(-(r**2/H**2))
 
 #
