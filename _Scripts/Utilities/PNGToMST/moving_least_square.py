@@ -1,4 +1,4 @@
-#    moving_least_square.py @ 2018, Wanze Xie
+#    moving_least_square.py @ 2019, Wanze Xie
 #
 #	 Purpose: run the moving least sqaure algorithim.
 #    Usage:
@@ -12,6 +12,9 @@ import scipy
 import numpy as np
 from scipy.optimize import minimize
 
+#
+# Two Utilities Functions
+#
 def normalize(v):
 	v = np.array(v)
 	norm = np.linalg.norm(v)
@@ -20,7 +23,40 @@ def normalize(v):
 	return v / norm
 
 def calc_weight(r, H):
+	if r < 0.001 or H < 0.01:
+		return 1
 	return np.exp(-(r**2/H**2))
+
+#
+# Purpose: Compute X1^4 + X2^4 + ... for [x1, x2, x3, ...]
+#
+# Param:  an array for [x1, x2, x3, ...]
+#
+# Return: return a float of the sum result
+#
+def quadri_sum(input_array):
+	return sum([ (x * x * x * x) for x in input_array])
+
+#
+# Purpose: Compute X1^3 + X2^3 + ... for [x1, x2, x3, ...]
+#
+# Param:  an array for [x1, x2, x3, ...]
+#
+# Return: return a float of the sum result
+#
+def tri_sum(input_array):
+	return sum([ (x * x * x) for x in input_array])
+
+#
+# Purpose: Compute X1^2 + X2^2 + ... for [x1, x2, x3, ...]
+#
+# Param:  an array for [x1, x2, x3, ...]
+#
+# Return: return a float of the sum result
+#
+def square_sum(input_array):
+	return sum([ (x * x) for x in input_array])
+
 
 #
 # Transform the "point" from the coordinate system established with target_p and tangent_vector (x axis)
@@ -68,46 +104,15 @@ def transform_coordinate_system(coords_list, target_p, tangent_vector, inverse=0
 
 
 #
-# Purpose: Compute X1^4 + X2^4 + ... for [x1, x2, x3, ...]
-#
-# Param:  an array for [x1, x2, x3, ...]
-#
-# Return: return a float of the sum result
-#
-def quadri_sum(input_array):
-	return sum([ (x * x * x * x) for x in input_array])
-
-#
-# Purpose: Compute X1^3 + X2^3 + ... for [x1, x2, x3, ...]
-#
-# Param:  an array for [x1, x2, x3, ...]
-#
-# Return: return a float of the sum result
-#
-def tri_sum(input_array):
-	return sum([ (x * x * x) for x in input_array])
-
-
-#
-# Purpose: Compute X1^2 + X2^2 + ... for [x1, x2, x3, ...]
-#
-# Param:  an array for [x1, x2, x3, ...]
-#
-# Return: return a float of the sum result
-#
-def square_sum(input_array):
-	return sum([ (x * x) for x in input_array])
-
-
-#
-# Purpose: Get the current linear loss 
+# Purpose: Get the quadratic loss with weight function
 #
 # Param:
 #               y_true:  an array that contains all true y values
 #               y_pred:  an array that contains all beta[0]*x + beta[1] result
 #               sample_weights: an array of weights
 #
-# Return: return an array [x,y] to represent the coordinate after moving
+# Return: return the loss/error value
+#
 def quadratic_weighted_loss(y_pred, y_true, sample_weights=None):
 	# Sanity check
 	y_true = np.array(y_true)
@@ -130,11 +135,13 @@ def quadratic_weighted_loss(y_pred, y_true, sample_weights=None):
 # Purpose: Get the current linear loss 
 #
 # Param:
-#               dist: an array of square distance from Pk to each point in array in MST
-#               H: prescribed param for weight, it should already be handled that 
-#                  all points here are within H
+#		beta: The parameter that you want to tune
+#		X: the array of X coordinate
+#		Y: the array of Y coordinates
+#		weights: the weight
 #
-# Return: 
+# Return: return the loss/error value
+#
 def objective_function_linear(beta, X, Y, weights):
 	beta = np.array(beta)
 	assert len(beta) == 2, "beta should have two elements since it is linear function"
