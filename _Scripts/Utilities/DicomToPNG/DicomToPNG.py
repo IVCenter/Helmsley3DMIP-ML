@@ -33,7 +33,7 @@ if len(all_dcms) == 0:
 curr_progress = 0
 prev_progress = 0
 
-for dcm in all_dcms[:1]:
+for dcm in all_dcms[:]:
 	
 	curr_progress = dcm_count * 1.0 / len(all_dcms)
 
