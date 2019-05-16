@@ -9,7 +9,8 @@ import cv2
 import numpy as np
 import copy
 import os
-
+from os import walk
+import re as reg
 
 input_folder_path = "./ToConvert"
 output_folder_path = "./Result"
@@ -18,7 +19,7 @@ input_folder_path_raw = "./ToConvert/raw"
 input_folder_path_mask = "./ToConvert/mask"
 
 isImageFromTrainingData = 0
-isFileNameTheSame = 1
+isMRIMaskPNGFileNameTheSame = 0
 isDrawProgress = 1
 
 '''
@@ -86,15 +87,39 @@ def load_predicted_images_from_folder():
 
     raw_images = []
     mask_images = []
+    
+    fnames = []
+    
+    # reading and sorting file names
+    for (dirpath, dirname, filename) in walk(input_folder_path_raw):
+        fnames.extend(filename)
 
-    for filename in os.listdir(input_folder_path_raw):
+        numbers = []
+        fname_to_number = {}
+
+        to_delete = []
+        for fname in fnames:
+            if(len(reg.findall(r'\d+', fname)) > 0):
+                numbers.append(reg.findall(r'\d+', fname)[0])
+                fname_to_number[fname] = reg.findall(r'\d+', fname)[0]
+            else:
+                print("Found weird file and ignored: " + str(fname))
+                to_delete.append(fname)
+
+        for ddd in to_delete:
+            del fnames[fnames.index(ddd)]
+
+        # fname_to_number = dict(zip(fnames,numbers))
+        fnames.sort(key = lambda fname : int(fname_to_number[fname]))
+
+    for filename in fnames:
         img = cv2.imread(os.path.join(input_folder_path_raw,filename))
         if img is not None:
             raw_images.append(img)
 
             number, file_extension = os.path.splitext(filename)
             mask_filename = number + "_predict.png"
-            if isFileNameTheSame == 1:
+            if isMRIMaskPNGFileNameTheSame == 1:
                 mask_filename = filename
             print (mask_filename)
             img_mask = cv2.imread(os.path.join(input_folder_path_mask,mask_filename))
@@ -118,7 +143,7 @@ if isImageFromTrainingData == 1:
 	raw_images = load_images_from_folder(input_folder_path_raw)
 	mask_images = load_images_from_folder(input_folder_path_mask)
 else:
-	raw_images, mask_images = load_predicted_images_from_folder()
+    raw_images, mask_images = load_predicted_images_from_folder()
 
 # print (str(len(mask_images)) + " number of mask images")
 
