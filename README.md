@@ -1,4 +1,4 @@
-# Helmsley 3D MIP Project
+# Helmsley 3D MIP Project - ML 
 A repo for 3D medical MRI image visualization and organ (colon) segmentation for Crohn's Disease using deep Convolutional Neural Network and curve/plane reconstruction algorithms 
 
 ## Demo Video:
