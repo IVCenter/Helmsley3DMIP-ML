@@ -1,6 +1,10 @@
 # A git ignore for python
-
 .DS_Store
+
+#ignore videos
+*.avi
+*.mp4
+*.mov
 
 # Saved Keras Model, Too large for github
 *.hdf5

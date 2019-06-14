@@ -116,7 +116,7 @@ def load_predicted_images_from_folder():
             raw_images.append(img)
 
             number, file_extension = os.path.splitext(filename)
-            mask_filename = number + "_predict.png"
+            mask_filename = number + ".png"
             if isMRIMaskPNGFileNameTheSame == 1:
                 mask_filename = filename
             print (mask_filename)
