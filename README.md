@@ -13,10 +13,10 @@ A repo for 3D medical MRI image visualization and organ (colon) segmentation for
 ## Frameworks and Libraries Utilized
 
 * [Pickle](https://docs.python.org/3/library/pickle.html)
-* [Python 2.7](https://www.python.org/)
+* [Python 2.7 & Python 3.6.8](https://www.python.org/)
 * [OpenCV](https://opencv.org/)
 * [PyDicom](https://pydicom.github.io/pydicom/stable/index.html)
-* [Keras with Tensorflow Kernel]()
+* [Keras with Tensorflow Kernel](https://keras.io/)
 * [Python.h]() - C_API for wrapping the python scripts in a C++ Interface
 
 
