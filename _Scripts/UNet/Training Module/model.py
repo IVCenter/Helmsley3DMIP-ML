@@ -2,16 +2,17 @@ import numpy as np
 import os
 import skimage.io as io
 import skimage.transform as trans
-import numpy as np
-from keras.models import *
-from keras.layers import *
-from keras.optimizers import *
-from keras.callbacks import ModelCheckpoint, LearningRateScheduler
-from keras import backend as keras
-from keras.layers import LeakyReLU
-
-from keras.utils.training_utils import multi_gpu_model
 import tensorflow as tf
+import tensorflow.keras as keras    
+from tensorflow.keras.models import *
+from tensorflow.keras.layers import *
+from tensorflow.keras.optimizers import * 
+from tensorflow.keras.callbacks import ModelCheckpoint, LearningRateScheduler
+from tensorflow.keras import backend as keras
+from tensorflow.keras.layers import LeakyReLU
+
+from tensorflow.keras.utils import multi_gpu_model
+
 
 # This is the number of GPU you want to use
 G = 2
