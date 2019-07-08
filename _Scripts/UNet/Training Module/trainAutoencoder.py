@@ -22,7 +22,7 @@ This script train the model using the PNG images and labels, and save the model 
 image_folder = 'mri_images_30'
 label_folder = 'mri_images_30'
 save_folder = 'model_checkpoint'
-model_name = 'colon'
+model_name = 'autoencoder'
 
 model_name = model_name + time_stamp
 
@@ -48,7 +48,7 @@ model_checkpoint = ModelCheckpoint(save_path, monitor='loss',verbose=1, save_bes
 '''
 The training starts here.
 '''
-model.fit_generator(myGene,steps_per_epoch=20000,epochs=2,callbacks=[model_checkpoint])
+model.fit_generator(myGene,steps_per_epoch=5000,epochs=10,callbacks=[model_checkpoint])
 
 
 
