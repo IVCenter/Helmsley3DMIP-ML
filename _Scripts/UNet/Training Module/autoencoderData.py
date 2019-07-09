@@ -121,7 +121,7 @@ def trainGeneratorRGB(batch_size,train_path,image_folder,mask_folder,aug_dict,im
 
 
 
-def testGenerator(test_path,num_image = 30,target_size = (256,256),flag_multi_class = False,as_gray = True):
+def testGenerator(test_path,num_image = 30,target_size = (512,512),flag_multi_class = False,as_gray = True):
     for i in range(num_image):
         img = io.imread(os.path.join(test_path,"%d.png"%i),as_gray = as_gray)
         img = img / 255

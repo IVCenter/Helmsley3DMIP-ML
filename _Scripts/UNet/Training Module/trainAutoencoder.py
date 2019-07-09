@@ -21,9 +21,9 @@ This script train the model using the PNG images and labels, and save the model 
 
 image_folder = 'mri_images_30'
 label_folder = 'mri_images_30'
-save_folder = '/myvolume/model_archine'
-model_name = 'colon'
-log_folder = '/myvolume/log'
+save_folder = 'model_archive'
+model_name = 'autoencoder'
+log_folder = 'log'
 
 model_name = model_name + time_stamp
 
