@@ -3,7 +3,7 @@ import datetime
 from autoencoderModel import *
 from autoencoderData import *
 from tensorflow.python.client import device_lib
-
+from tensorflow.keras.callbacks import TensorBoard
 # Check the currently available GPUs
 print(device_lib.list_local_devices())
 
@@ -21,8 +21,9 @@ This script train the model using the PNG images and labels, and save the model 
 
 image_folder = 'mri_images_30'
 label_folder = 'mri_images_30'
-save_folder = 'model_checkpoint'
+save_folder = '/myvolume/model_archine'
 model_name = 'colon'
+log_folder = '/myvolume/log'
 
 model_name = model_name + time_stamp
 
@@ -44,11 +45,12 @@ myGene = trainGenerator(2,'Datasets',image_folder,label_folder,data_gen_args,sav
 model = autoencoder()
 
 model_checkpoint = ModelCheckpoint(save_path, monitor='loss',verbose=1, save_best_only=True)
+tensorboard_callback = TensorBoard(log_dir=log_folder,histogram_freq=2)
 
 '''
 The training starts here.
 '''
-model.fit_generator(myGene,steps_per_epoch=20000,epochs=2,callbacks=[model_checkpoint])
+model.fit_generator(myGene,steps_per_epoch=5000,epochs=50,callbacks=[model_checkpoint, tensorboard_callback])
 
 
 
