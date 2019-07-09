@@ -19,8 +19,8 @@ time_stamp = datetime.datetime.fromtimestamp(now).strftime('_%m_%d_%H_%M')
 This script train the model using the PNG images and labels, and save the model as hdf5 file
 '''
 
-image_folder = 'mri_images_30'
-label_folder = 'mri_images_30'
+image_folder = 'mri_images_16_17'
+label_folder = 'mri_images_16_17'
 save_folder = 'model_archive'
 model_name = 'autoencoder'
 log_folder = 'log'
@@ -40,17 +40,17 @@ data_gen_args = dict(rotation_range=0.2,
 
 save_path = save_folder + '/' + model_name + '.hdf5'
 
-myGene = trainGenerator(2,'Datasets',image_folder,label_folder,data_gen_args,save_to_dir = None, target_size = (512, 512))
+myGene = trainGenerator(64,'Datasets',image_folder,label_folder,data_gen_args,save_to_dir = None, target_size = (256, 256))
 
-model = autoencoder()
+model = autoencoder2(nz=200)
 
 model_checkpoint = ModelCheckpoint(save_path, monitor='loss',verbose=1, save_best_only=True)
-tensorboard_callback = TensorBoard(log_dir=log_folder,histogram_freq=2)
+tensorboard_callback = TensorBoard(log_dir=log_folder,histogram_freq=1)
 
 '''
 The training starts here.
 '''
-model.fit_generator(myGene,steps_per_epoch=5000,epochs=50,callbacks=[model_checkpoint, tensorboard_callback])
+model.fit_generator(myGene,steps_per_epoch=50, epochs=50,callbacks=[model_checkpoint, tensorboard_callback])
 
 
 
