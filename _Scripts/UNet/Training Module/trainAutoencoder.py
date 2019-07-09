@@ -40,7 +40,7 @@ data_gen_args = dict(rotation_range=0.2,
 
 save_path = save_folder + '/' + model_name + '.hdf5'
 
-myGene = trainGenerator(64,'Datasets',image_folder,label_folder,data_gen_args,save_to_dir = None, target_size = (256, 256))
+myGene = trainGenerator(64,'Datasets',image_folder,label_folder,data_gen_args,save_to_dir = None, target_size = (128, 128))
 
 model = autoencoder2(nz=200)
 
