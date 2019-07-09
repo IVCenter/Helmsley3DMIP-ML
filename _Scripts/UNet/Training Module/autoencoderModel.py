@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-=======
 import tensorflow as tf
->>>>>>> fa72639f022db440a8f33253ace4d9560e19faba
 from tensorflow.keras.callbacks import ModelCheckpoint, LearningRateScheduler
 from tensorflow.keras.layers import Input, Dense, Conv2D, MaxPooling2D, UpSampling2D
 from tensorflow.keras.models import Model
