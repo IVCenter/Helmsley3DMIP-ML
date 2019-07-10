@@ -40,9 +40,9 @@ data_gen_args = dict(rotation_range=0.2,
 
 save_path = save_folder + '/' + model_name + '.hdf5'
 
-myGene = trainGenerator(4,'Datasets',image_folder,label_folder,data_gen_args,save_to_dir = None, target_size = (128, 128))
+myGene = trainGenerator(4,'Datasets',image_folder,label_folder,data_gen_args,save_to_dir = None, target_size = (256, 256))
 
-model = autoencoder2(nz=300)
+model = autoencoder2(nz=400)
 
 model_checkpoint = ModelCheckpoint(save_path, monitor='loss',verbose=1, save_best_only=True)
 tensorboard_callback = TensorBoard(log_dir=log_folder,histogram_freq=1)
@@ -50,7 +50,7 @@ tensorboard_callback = TensorBoard(log_dir=log_folder,histogram_freq=1)
 '''
 The training starts here.
 '''
-model.fit_generator(myGene,steps_per_epoch=10000, epochs=5,callbacks=[model_checkpoint, tensorboard_callback])
+model.fit_generator(myGene,steps_per_epoch=256, epochs=64,callbacks=[model_checkpoint, tensorboard_callback])
 
 
 
