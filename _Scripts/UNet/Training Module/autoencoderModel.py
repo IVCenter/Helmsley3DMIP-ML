@@ -46,7 +46,7 @@ def autoencoder(input_size=(512, 512, 1)):
         
     return model
 
-def autoencoder2(input_size=(256, 256, 1), nz=200):
+def autoencoder2(input_size, nz):
 
     input_img = Input(shape=input_size)  # adapt this if using `channels_first` image data format
 
@@ -55,6 +55,8 @@ def autoencoder2(input_size=(256, 256, 1), nz=200):
     x = Conv2D(128, (3, 3), activation='relu',  padding='same')(x)
     x = MaxPooling2D((2, 2), padding='same')(x)
     x = Conv2D(256, (3, 3),  activation='relu', padding='same')(x)
+    x = MaxPooling2D((2, 2), padding='same')(x)
+    x = Conv2D(512, (3, 3),  activation='relu', padding='same')(x)
     x = MaxPooling2D((2, 2), padding='same')(x)
     x = Conv2D(512, (3, 3),  activation='relu', padding='same')(x)
     x = MaxPooling2D((2, 2), padding='same')(x)
@@ -78,6 +80,8 @@ def autoencoder2(input_size=(256, 256, 1), nz=200):
     x = UpSampling2D((2, 2))(x)
     x = Conv2D(512, (3, 3), activation='relu', padding='same')(x)
     x = UpSampling2D((2, 2))(x)
+    x = Conv2D(512, (3, 3), activation='relu', padding='same')(x)
+    x = UpSampling2D((2, 2))(x)
     x = Conv2D(256, (3, 3), activation='relu', padding='same')(x)
     x = UpSampling2D((2, 2))(x)
     x = Conv2D(128, (3, 3), activation='relu', padding='same')(x)
@@ -95,7 +99,9 @@ def autoencoder2(input_size=(256, 256, 1), nz=200):
     
         model = multi_gpu_model(model, gpus=G)
         
-    model.compile(optimizer='adam', loss='binary_crossentropy')
+    #model.compile(optimizer='adam', loss='binary_crossentropy')
+    model.compile(optimizer='adam', loss='mse')
+    
     print(model.summary()) 
      
     return model
