@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint, LearningRateScheduler
-from tensorflow.keras.layers import Input, Dense, Reshape, Conv2D, MaxPooling2D, UpSampling2D, LeakyReLU
+from tensorflow.keras.layers import Input, Dense, Reshape, Conv2D, MaxPooling2D, UpSampling2D, LeakyReLU, Conv2DTranspose
 from tensorflow.keras.models import Model
 from tensorflow.keras import backend as K
 from tensorflow.keras.utils import multi_gpu_model
@@ -50,20 +50,15 @@ def autoencoder2(input_size=(128, 128, 1), nz=200):
 
     input_img = Input(shape=input_size)  # adapt this if using `channels_first` image data format
 
-    x = Conv2D(64, (3, 3), padding='same')(input_img)
-    x = LeakyReLU(0.2)(x)
+    x = Conv2D(64, (3, 3), activation='relu', padding='same')(input_img)
     x = MaxPooling2D((2, 2), padding='same')(x)
-    x = Conv2D(128, (3, 3), padding='same')(x)
-    x = LeakyReLU(0.2)(x)
+    x = Conv2D(128, (3, 3), activation='relu',  padding='same')(x)
     x = MaxPooling2D((2, 2), padding='same')(x)
-    x = Conv2D(256, (3, 3), padding='same')(x)
-    x = LeakyReLU(0.2)(x)
+    x = Conv2D(256, (3, 3),  activation='relu', padding='same')(x)
     x = MaxPooling2D((2, 2), padding='same')(x)
-    x = Conv2D(512, (3, 3), padding='same')(x)
-    x = LeakyReLU(0.2)(x)
+    x = Conv2D(512, (3, 3),  activation='relu', padding='same')(x)
     x = MaxPooling2D((2, 2), padding='same')(x)
-    x = Conv2D(1024, (3, 3), padding='same')(x)
-    x = LeakyReLU(0.2)(x)
+    x = Conv2D(1024, (3, 3), activation='relu',  padding='same')(x)
     x = MaxPooling2D((2, 2), padding='same')(x)
     #x = Conv2D(1024, (3, 3), padding='same')(x)
     #x = LeakyReLU(0.2)(x)
@@ -78,8 +73,6 @@ def autoencoder2(input_size=(128, 128, 1), nz=200):
     
     x = Dense(4*4*1024)(encoded)
     x = Reshape((4, 4, 1024))(x)
-    #x = Conv2D(1024, (3, 3), activation='relu', padding='same')(x)
-    #x = UpSampling2D((2, 2))(x)
     x = Conv2D(1024, (3, 3), activation='relu', padding='same')(x)
     x = UpSampling2D((2, 2))(x)
     x = Conv2D(512, (3, 3), activation='relu', padding='same')(x)
@@ -102,5 +95,6 @@ def autoencoder2(input_size=(128, 128, 1), nz=200):
         model = multi_gpu_model(model, gpus=G)
         
     model.compile(optimizer='adadelta', loss='binary_crossentropy')
-        
+    print(model.summary()) 
+     
     return model
