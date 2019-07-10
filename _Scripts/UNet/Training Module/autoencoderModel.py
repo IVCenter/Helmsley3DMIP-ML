@@ -46,7 +46,7 @@ def autoencoder(input_size=(512, 512, 1)):
         
     return model
 
-def autoencoder2(input_size=(256, 256, 1), nz=300):
+def autoencoder2(input_size=(256, 256, 1), nz=200):
 
     input_img = Input(shape=input_size)  # adapt this if using `channels_first` image data format
 
