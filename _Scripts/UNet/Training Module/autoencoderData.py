@@ -25,9 +25,12 @@ COLOR_DICT = np.array([Sky, Building, Pole, Road, Pavement,
 
 def adjustData(img,img_dec):
     
-    img = img/255
-    img_dec = img_dec/255
-        
+    m = np.max(img)
+    mi = np.min(img)
+
+    img = (img - mi)/(m - mi)
+    img_dec = (img_dec - mi)/(m - mi)
+    
     return (img,img_dec)
 
 
@@ -72,9 +75,13 @@ def trainGenerator(batch_size,train_path,image_folder,mask_folder,aug_dict,image
 def testGenerator(test_path,num_image = 30,target_size = (512,512),flag_multi_class = False,as_gray = True):
     for i in range(num_image):
         img = io.imread(os.path.join(test_path,"%d.png"%i),as_gray = as_gray)
-        img = img / 255
+        
+        m = np.max(img)
+        mi = np.min(img)
+        img = (img - mi)/(m - mi)
+        
         img = trans.resize(img,target_size)
-        img = np.reshape(img,img.shape+(1,)) if (not flag_multi_class) else img
+        img = np.reshape(img, img.shape+(1,))
         img = np.reshape(img,(1,)+img.shape)
         yield img
 

@@ -40,7 +40,7 @@ path_to_the_hdf5_model = str(sys.argv[2])
 Run the Test scripts
 '''
 testGene = testGenerator(input_path,num_images, target_size=(512, 512))
-model = autoencoder2((512, 512, 1), 2000)
+model = autoencoder((512, 512, 1))
 model.load_weights(path_to_the_hdf5_model)
 results = model.predict_generator(testGene,num_images,verbose=1)
 
