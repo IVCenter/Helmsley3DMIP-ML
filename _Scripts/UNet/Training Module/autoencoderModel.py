@@ -5,7 +5,7 @@ from tensorflow.keras.layers import BatchNormalization, SpatialDropout2D
 from tensorflow.keras.models import Model
 from tensorflow.keras import backend as K
 from tensorflow.keras.utils import multi_gpu_model
-G = 1
+G = 2
 def autoencoder(input_size=(512, 512, 1)):
 
     input_img = Input(shape=input_size)  # adapt this if using `channels_first` image data format
@@ -55,37 +55,33 @@ def autoencoder1_2(input_size=(512, 512, 1)):
 
     input_img = Input(shape=input_size)  # adapt this if using `channels_first` image data format
 
-    x = Conv2D(256, (3, 3), activation='relu', padding='same')(input_img)
+    x = Conv2D(128, (3, 3), activation='relu', padding='same')(input_img)
+    x = BatchNormalization()(x)
+    x = Conv2D(128, (3, 3), activation='relu', padding='same')(x)
+    x = BatchNormalization()(x)
+    x = MaxPooling2D((2, 2), padding='same')(x)
+    x = Conv2D(256, (3, 3), activation='relu', padding='same')(x)
     x = BatchNormalization()(x)
     x = Conv2D(256, (3, 3), activation='relu', padding='same')(x)
     x = BatchNormalization()(x)
-    x = SpatialDropout2D(0.3)(x)
     x = MaxPooling2D((2, 2), padding='same')(x)
     x = Conv2D(512, (3, 3), activation='relu', padding='same')(x)
     x = BatchNormalization()(x)
     x = Conv2D(512, (3, 3), activation='relu', padding='same')(x)
     x = BatchNormalization()(x)
-    x = SpatialDropout2D(0.3)(x)
-    x = MaxPooling2D((2, 2), padding='same')(x)
-    x = Conv2D(1024, (3, 3), activation='relu', padding='same')(x)
-    x = BatchNormalization()(x)
-    x = Conv2D(1024, (3, 3), activation='relu', padding='same')(x)
-    x = BatchNormalization()(x)
-    x = SpatialDropout2D(0.3)(x)
+    x = SpatialDropout2D(0.4)(x)
 
     # at this point the representation is (4, 4, 8) i.e. 128-dimensional
 
-    x = Conv2D(512, (3, 3), activation='relu', padding='same')(x)
+    x = Conv2D(256, (3, 3), activation='relu', padding='same')(x)
     x = BatchNormalization()(x)
-    x = Conv2D(512, (3, 3), activation='relu', padding='same')(x)
+    x = Conv2D(256, (3, 3), activation='relu', padding='same')(x)
     x = BatchNormalization()(x)
-    x = SpatialDropout2D(0.3)(x)
     x = UpSampling2D((2, 2))(x)
-    x = Conv2D(256, (3, 3), activation='relu', padding='same')(x)
+    x = Conv2D(128, (3, 3), activation='relu', padding='same')(x)
     x = BatchNormalization()(x)
-    x = Conv2D(256, (3, 3), activation='relu', padding='same')(x)
+    x = Conv2D(128, (3, 3), activation='relu', padding='same')(x)
     x = BatchNormalization()(x)
-    x = SpatialDropout2D(0.3)(x)
     x = UpSampling2D((2, 2))(x)
     decoded = Conv2D(1, 3, activation='sigmoid', padding='same')(x)
     
