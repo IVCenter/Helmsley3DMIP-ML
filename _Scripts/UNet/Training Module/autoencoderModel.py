@@ -51,28 +51,47 @@ def autoencoder(input_size=(512, 512, 1)):
     model.compile(optimizer='RMSprop', loss='mean_squared_error')
         
     return model
+
 def autoencoder1_2(input_size=(512, 512, 1)):
 
     input_img = Input(shape=input_size)  # adapt this if using `channels_first` image data format
 
-    x = Conv2D(128, (3, 3), activation='relu', padding='same')(input_img)
+    x = Conv2D(128, (3, 3), activation='linear', padding='same')(input_img)
+    x = LeakyReLU(0.2)(x)
     x = BatchNormalization()(x)
-    x = Conv2D(128, (3, 3), activation='relu', padding='same')(x)
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 2), padding='same')(x)
-    x = Conv2D(256, (3, 3), activation='relu', padding='same')(x)
-    x = BatchNormalization()(x)
-    x = Conv2D(256, (3, 3), activation='relu', padding='same')(x)
+    x = Conv2D(128, (3, 3), activation='linear', padding='same')(x)
+    x = LeakyReLU(0.2)(x)
     x = BatchNormalization()(x)
     x = MaxPooling2D((2, 2), padding='same')(x)
-    x = Conv2D(512, (3, 3), activation='relu', padding='same')(x)
+    x = Conv2D(256, (3, 3), activation='linear', padding='same')(x)
+    x = LeakyReLU(0.2)(x)
     x = BatchNormalization()(x)
-    x = Conv2D(512, (3, 3), activation='relu', padding='same')(x)
+    x = Conv2D(256, (3, 3), activation='linear', padding='same')(x)
+    x = LeakyReLU(0.2)(x)
+    x = BatchNormalization()(x)
+    x = MaxPooling2D((2, 2), padding='same')(x)
+    x = Conv2D(512, (3, 3), activation='linear', padding='same')(x)
+    x = LeakyReLU(0.2)(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(512, (3, 3), activation='linear', padding='same')(x)
+    x = LeakyReLU(0.2)(x)
+    x = BatchNormalization()(x)
+    x = MaxPooling2D((2, 2), padding='same')(x)
+    x = Conv2D(1024, (3, 3), activation='linear', padding='same')(x)
+    x = LeakyReLU(0.2)(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(1024, (3, 3), activation='linear', padding='same')(x)
+    x = LeakyReLU(0.2)(x)
     x = BatchNormalization()(x)
     x = SpatialDropout2D(0.4)(x)
 
     # at this point the representation is (4, 4, 8) i.e. 128-dimensional
 
+    x = Conv2D(512, (3, 3), activation='relu', padding='same')(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(512, (3, 3), activation='relu', padding='same')(x)
+    x = BatchNormalization()(x)
+    x = UpSampling2D((2, 2))(x)
     x = Conv2D(256, (3, 3), activation='relu', padding='same')(x)
     x = BatchNormalization()(x)
     x = Conv2D(256, (3, 3), activation='relu', padding='same')(x)
@@ -97,7 +116,6 @@ def autoencoder1_2(input_size=(512, 512, 1)):
     model.compile(optimizer='RMSprop', loss='mean_squared_error')
         
     return model
-
 
 def autoencoder2(input_size, nz):
 
