@@ -2,7 +2,9 @@ import time
 import datetime
 from model import *
 from data import *
+from test_model import *
 from tensorflow.python.client import device_lib
+from tensorflow.keras.callbacks import TensorBoard
 
 # Check the currently available GPUs
 print(device_lib.list_local_devices())
@@ -19,10 +21,11 @@ time_stamp = datetime.datetime.fromtimestamp(now).strftime('_%m_%d_%H_%M')
 This script train the model using the PNG images and labels, and save the model as hdf5 file
 '''
 
-image_folder = 'mri_images_30_autoencoder'
-label_folder = 'mri_labels_30'
+image_folder = 'mri_image_2017_7_22_30_autoencoder'
+label_folder = 'mri_label_2017_7_22_30'
 save_folder = 'model_archive'
 model_name = 'colon'
+log_folder = "log"
 
 model_name = model_name + time_stamp
 
@@ -39,17 +42,17 @@ data_gen_args = dict(rotation_range=0.2,
 
 save_path = save_folder + '/' + model_name + '.hdf5'
 
-myGene = trainGenerator(4,'Datasets',image_folder,label_folder,data_gen_args,save_to_dir = None)
+myGene = trainGenerator(8,'Datasets',image_folder,label_folder,data_gen_args,save_to_dir = None)
 
-model = unet()
-# model = unet_lrelu()
+model = unet_batch_norm()
 
 model_checkpoint = ModelCheckpoint(save_path, monitor='loss',verbose=1, save_best_only=True)
+tensorboard_callback = TensorBoard(log_dir=log_folder,histogram_freq=2, write_grads=True, write_images=True)
 
 '''
 The training starts here.
 '''
-model.fit_generator(myGene,steps_per_epoch=20000,epochs=5,callbacks=[model_checkpoint])
+model.fit_generator(myGene,steps_per_epoch=7500,epochs=5,callbacks=[model_checkpoint, tensorboard_callback])
 
 
 
