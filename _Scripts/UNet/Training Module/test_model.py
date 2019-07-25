@@ -14,42 +14,52 @@ from tensorflow.keras.utils import multi_gpu_model
 from tensorflow.keras.initializers import glorot_uniform 
 
 # This is the number of GPU you want to use
-G = 1
-
+G = 2
+alpha=0.1
 def unet_batch_norm(pretrained_weights = False,input_size = (256,256,1)):
     inputs = Input(input_size)
-    conv1 = Conv2D(64, 3, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal')(inputs)
+    conv1 = Conv2D(64, 3, activation = 'linear', padding = 'same', kernel_initializer = 'glorot_normal')(inputs)
+    conv1 = LeakyReLU(alpha)(conv1)
     conv1 = BatchNormalization()(conv1)
-    conv1 = Conv2D(64, 3, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal')(conv1)
+    conv1 = Conv2D(64, 3, activation = 'linear', padding = 'same', kernel_initializer = 'glorot_normal')(conv1)
+    conv1 = LeakyReLU(alpha)(conv1)
     conv1 = BatchNormalization()(conv1)
     
     pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
     
-    conv2 = Conv2D(128, 3, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal')(pool1)
+    conv2 = Conv2D(128, 3, activation = 'linear', padding = 'same', kernel_initializer = 'glorot_normal')(pool1)
+    conv2 = LeakyReLU(alpha)(conv2)
     conv2 = BatchNormalization()(conv2)
-    conv2 = Conv2D(128, 3, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal')(conv2)
+    conv2 = Conv2D(128, 3, activation = 'linear', padding = 'same', kernel_initializer = 'glorot_normal')(conv2)
+    conv2 = LeakyReLU(alpha)(conv2)
     conv2 = BatchNormalization()(conv2)
     
     pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
     
-    conv3 = Conv2D(256, 3, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal')(pool2)
+    conv3 = Conv2D(256, 3, activation = 'linear', padding = 'same', kernel_initializer = 'glorot_normal')(pool2)
+    conv3 = LeakyReLU(alpha)(conv3)
     conv3 = BatchNormalization()(conv3)
-    conv3 = Conv2D(256, 3, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal')(conv3)
+    conv3 = Conv2D(256, 3, activation = 'linear', padding = 'same', kernel_initializer = 'glorot_normal')(conv3)
+    conv3 = LeakyReLU(alpha)(conv3)
     conv3 = BatchNormalization()(conv3)
     
     pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
     
-    conv4 = Conv2D(512, 3, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal')(pool3)
+    conv4 = Conv2D(512, 3, activation = 'linear', padding = 'same', kernel_initializer = 'glorot_normal')(pool3)
+    conv4 = LeakyReLU(alpha)(conv4)
     conv4 = BatchNormalization()(conv4)
-    conv4 = Conv2D(512, 3, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal')(conv4)
+    conv4 = Conv2D(512, 3, activation = 'linear', padding = 'same', kernel_initializer = 'glorot_normal')(conv4)
+    conv4 = LeakyReLU(alpha)(conv4)
     conv4 = BatchNormalization()(conv4)
     drop4 = Dropout(0.5)(conv4)
     
     pool4 = MaxPooling2D(pool_size=(2, 2))(drop4)
 
-    conv5 = Conv2D(1024, 3, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal')(pool4)
+    conv5 = Conv2D(1024, 3, activation = 'linear', padding = 'same', kernel_initializer = 'glorot_normal')(pool4)
+    conv5 = LeakyReLU(alpha)(conv5)
     conv5 = BatchNormalization()(conv5)
-    conv5 = Conv2D(1024, 3, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal')(conv5)
+    conv5 = Conv2D(1024, 3, activation = 'linear', padding = 'same', kernel_initializer = 'glorot_normal')(conv5)
+    conv5 = LeakyReLU(alpha)(conv5)
     conv5 = BatchNormalization()(conv5)
     drop5 = Dropout(0.5)(conv5)
 
