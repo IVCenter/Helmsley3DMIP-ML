@@ -21,8 +21,8 @@ time_stamp = datetime.datetime.fromtimestamp(now).strftime('_%m_%d_%H_%M')
 This script train the model using the PNG images and labels, and save the model as hdf5 file
 '''
 
-image_folder = 'mri_image_2017_7_22_30_autoencoder'
-label_folder = 'mri_label_2017_7_22_30'
+image_folder = 'mri_image_16_17_66_autoencoder'
+label_folder = 'mri_label_16_17_66'
 save_folder = 'model_archive'
 model_name = 'colon'
 log_folder = "log"

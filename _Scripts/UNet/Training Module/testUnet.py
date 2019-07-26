@@ -12,7 +12,7 @@ import time
 import datetime
 from model import *
 from data import *
-from test_model import *
+#from test_model import *
 from tensorflow.python.client import device_lib
 
 print(device_lib.list_local_devices())
@@ -43,12 +43,23 @@ Run the Test scripts
 testGene = testGenerator(input_path,num_images)
 model = unet_batch_norm()
 model.load_weights(path_to_the_hdf5_model)
-results = model.predict_generator(testGene,num_images,verbose=1)
 
+'''
+Get the single gpu weight if the model is trained with multi-gpu model
+This testing only uses one gpu 
+'''
+
+#single_gpu_model = model.layers[-2]
+#single_gpu_model.save("./temp.hdf5")
+
+#results = single_gpu_model.predict_generator(testGene,num_images,verbose=1)
+
+results = model.predict_generator(testGene,num_images,verbose=1)
 '''
 Save the results
 '''
 os.system("mkdir " + output_path)
 saveResult(output_path,results)
+#os.system("rm ./temp.hdf5")
 
 

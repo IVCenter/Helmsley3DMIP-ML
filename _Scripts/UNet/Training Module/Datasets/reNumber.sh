@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for i in {1..30}
+for i in {0..29}
 do
-	mv "$i.png" "$(($i-1)).png"
+	mv "${i}_predict.png" "${i}.png"
 done
