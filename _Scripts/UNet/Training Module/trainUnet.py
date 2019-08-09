@@ -1,6 +1,7 @@
 import time
 import datetime
 from model import *
+from model_blocks import uNetModel
 from data import *
 from test_model import *
 from tensorflow.python.client import device_lib
@@ -42,9 +43,9 @@ data_gen_args = dict(rotation_range=0.2,
 
 save_path = save_folder + '/' + model_name + '.hdf5'
 
-myGene = trainGenerator(8,'Datasets',image_folder,label_folder,data_gen_args,save_to_dir = None)
+myGene = trainGenerator(2,'Datasets',image_folder,label_folder,data_gen_args,save_to_dir = None)
 
-model = unet_batch_norm()
+model = uNetModel()
 
 model_checkpoint = ModelCheckpoint(save_path, monitor='loss',verbose=1, save_best_only=True)
 tensorboard_callback = TensorBoard(log_dir=log_folder,histogram_freq=2, write_grads=True, write_images=True)
