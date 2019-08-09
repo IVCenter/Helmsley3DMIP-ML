@@ -9,6 +9,10 @@
 # Saved Keras Model, Too large for github
 *.hdf5
 
+# Ignore toDownLoad Foldwe
+
+toDownload/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

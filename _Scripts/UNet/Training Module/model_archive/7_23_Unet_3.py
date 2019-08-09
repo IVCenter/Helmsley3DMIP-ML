@@ -14,7 +14,7 @@ from tensorflow.keras.utils import multi_gpu_model
 from tensorflow.keras.initializers import glorot_uniform 
 
 # This is the number of GPU you want to use
-G = 4
+G = 1
 alpha=0.1
 def unet_batch_norm(pretrained_weights = False,input_size = (256,256,1)):
     inputs = Input(input_size)
