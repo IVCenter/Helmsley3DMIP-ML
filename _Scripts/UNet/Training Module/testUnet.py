@@ -10,9 +10,9 @@ if len(sys.argv) != 3:
 
 import time
 import datetime
-from model import *
+#from model import *
 from data import *
-#from test_model import *
+from test_model import *
 from tensorflow.python.client import device_lib
 
 print(device_lib.list_local_devices())
@@ -21,7 +21,7 @@ print(device_lib.list_local_devices())
 Get time
 '''
 now = time.time()
-time_stamp = datetime.datetime.fromtimestamp(now).strftime('_%m_%d_%H_%M')
+time_stamp = datetime.datetime.fromtimestamp(now).strftime('_%m_%d_%H')
 
 
 
@@ -29,7 +29,7 @@ input_path = str(sys.argv[1])
 input_folder = os.path.basename(os.path.normpath(input_path))
 
 output_folder = input_folder + time_stamp
-output_path = './Tests/' + output_folder
+output_path = './newTests/' + output_folder
 
 num_images = len([name for name in os.listdir(input_path) if os.path.isfile(os.path.join(input_path,name))])
 
@@ -41,7 +41,7 @@ path_to_the_hdf5_model = str(sys.argv[2])
 Run the Test scripts
 '''
 testGene = testGenerator(input_path,num_images)
-model = unet_batch_norm()
+model, cpuModel = unet_batch_norm()
 model.load_weights(path_to_the_hdf5_model)
 
 '''

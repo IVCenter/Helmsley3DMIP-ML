@@ -14,7 +14,7 @@ from tensorflow.keras.utils import multi_gpu_model
 from tensorflow.keras.initializers import glorot_uniform 
 
 # This is the number of GPU you want to use
-G = 4
+G = 1  
 alpha=0.05
 def unet_batch_norm(pretrained_weights = False,input_size = (256,256,1)):
     inputs = Input(input_size)
@@ -99,19 +99,19 @@ def unet_batch_norm(pretrained_weights = False,input_size = (256,256,1)):
     conv10 = Conv2D(1, 1, activation = 'sigmoid')(conv9)
     
     if(G == 1):
+        cpuModel = None
         model = Model(inputs = inputs, outputs = conv10)
+        model.compile(optimizer = Adam(lr = 1e-4), loss = 'binary_crossentropy', metrics = ['accuracy'])
+        print(model.summary()) 
     else:
         with tf.device("/cpu:0"):
-            model = Model(inputs = inputs, outputs = conv10)
+            cpuModel = Model(inputs = inputs, outputs = conv10)
+            print(cpuModel.summary())
         
-        print(model.summary()) 
+        model = multi_gpu_model(cpuModel, gpus=G)
+        model.compile(optimizer = Adam(lr = 1e-4), loss = 'binary_crossentropy', metrics = ['accuracy'])
         
-        model = multi_gpu_model(model, gpus=G)
-        
-    model.compile(optimizer = Adam(lr = 1e-4), loss = 'binary_crossentropy', metrics = ['accuracy'])
+    return model, cpuModel
 
-    if(pretrained_weights):
-    	model.load_weights(pretrained_weights)
-
-    return model
- 
+    #if(pretrained_weights):
+    #	model.load_weights(pretrained_weights)
