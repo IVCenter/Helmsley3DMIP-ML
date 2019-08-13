@@ -29,7 +29,7 @@ input_path = str(sys.argv[1])
 input_folder = os.path.basename(os.path.normpath(input_path))
 
 output_folder = input_folder + time_stamp
-output_path = './newTests/' + output_folder
+output_path = './newTests/bladder/' + output_folder
 
 num_images = len([name for name in os.listdir(input_path) if os.path.isfile(os.path.join(input_path,name))])
 

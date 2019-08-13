@@ -22,10 +22,10 @@ time_stamp = datetime.datetime.fromtimestamp(now).strftime('_%m_%d_%H_%M')
 This script train the model using the PNG images and labels, and save the model as hdf5 file
 '''
 
-image_folder = 'mri_image_16_17_66_autoencoder'
-label_folder = 'mri_label_16_17_66'
+image_folder = 'mri_image_2017_bladder_autoencoder'
+label_folder = 'mri_label_2017_bladder_38'
 save_folder = 'model_archive'
-model_name = 'colon'
+model_name = 'bladder'
 log_folder = "log"
 
 model_name = model_name + time_stamp
@@ -43,7 +43,7 @@ data_gen_args = dict(rotation_range=0.2,
 
 save_path = save_folder + '/' + model_name + '.hdf5'
 
-myGene = trainGenerator(8,'Datasets',image_folder,label_folder,data_gen_args,save_to_dir = None)
+myGene = trainGenerator(4,'Datasets/bladder',image_folder,label_folder,data_gen_args,save_to_dir = None)
 
 
 model, cpuModel = unet_batch_norm()
