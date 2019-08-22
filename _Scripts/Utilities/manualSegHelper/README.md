@@ -45,5 +45,5 @@ Click that item and a console will pop up. Enter the following command:
 
 16. Open Anaconda Navigator, go to ```Environment``` tag and select the virtual environment you created. Click the triangle and click
 ```open with Jupyter Notebook```. This will bring up a browser with Jupiter notebook and the initial location will be your home
-directory. Navigate to our project folder.
+directory. Navigate to this manualSegHelper folder and open segmentaionTool.ipynb.
 
