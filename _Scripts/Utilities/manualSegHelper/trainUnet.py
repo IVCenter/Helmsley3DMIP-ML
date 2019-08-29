@@ -4,7 +4,14 @@ from data import *
 from test_model import *
 from tensorflow.python.client import device_lib
 
-def trainUnet():
+def trainUnet(multiLabel:bool=False):
+
+	if (multiLabel):
+		input_size = (256, 256, 3)
+		color_mode = 'rgb'
+	else:
+		color_mode = 'grayscale'
+		input_size = (256, 256, 1)
 	# Check the currently available GPUs
 	print(device_lib.list_local_devices())
 
@@ -39,10 +46,10 @@ def trainUnet():
 
 	save_path = save_folder + '/' + model_name + '.hdf5'
 
-	myGene = trainGenerator(4,'tmp',image_folder,label_folder,data_gen_args,save_to_dir = None)
+	myGene = trainGenerator(4,'tmp',image_folder,label_folder,data_gen_args,save_to_dir = None, image_color_mode = color_mode, mask_color_mode = color_mode)
 
 
-	model, cpuModel = unet_batch_norm()
+	model, cpuModel = unet_batch_norm(input_size=input_size)
 
 	'''
 	The training starts here.

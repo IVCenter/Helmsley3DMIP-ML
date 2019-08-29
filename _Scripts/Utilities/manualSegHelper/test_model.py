@@ -94,9 +94,9 @@ def unet_batch_norm(pretrained_weights = False,input_size = (256,256,1)):
     conv9 = BatchNormalization()(conv9)
     conv9 = Conv2D(64, 3, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal')(conv9)
     conv9 = BatchNormalization()(conv9)
-    conv9 = Conv2D(2, 3, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal')(conv9)
+    conv9 = Conv2D(3, 3, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal')(conv9)
     conv9 = BatchNormalization()(conv9)
-    conv10 = Conv2D(1, 1, activation = 'sigmoid')(conv9)
+    conv10 = Conv2D(3, 1, activation = 'sigmoid')(conv9)
     
     if(G == 1):
         cpuModel = None
