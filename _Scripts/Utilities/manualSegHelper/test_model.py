@@ -16,7 +16,7 @@ from tensorflow.keras.initializers import glorot_uniform
 # This is the number of GPU you want to use
 G = 1  
 alpha=0.05
-def unet_batch_norm(pretrained_weights = False,input_size = (256,256,1)):
+def unet_batch_norm(pretrained_weights = False,input_size = (256,256,1), numLabels:int=2):
     inputs = Input(input_size)
     conv1 = Conv2D(64, 3, activation = 'linear', padding = 'same', kernel_initializer = 'glorot_normal')(inputs)
     conv1 = LeakyReLU(alpha)(conv1)
@@ -94,7 +94,7 @@ def unet_batch_norm(pretrained_weights = False,input_size = (256,256,1)):
     conv9 = BatchNormalization()(conv9)
     conv9 = Conv2D(64, 3, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal')(conv9)
     conv9 = BatchNormalization()(conv9)
-    conv9 = Conv2D(3, 3, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal')(conv9)
+    conv9 = Conv2D(numLabels, 3, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal')(conv9)
     conv9 = BatchNormalization()(conv9)
     conv10 = Conv2D(3, 1, activation = 'sigmoid')(conv9)
     

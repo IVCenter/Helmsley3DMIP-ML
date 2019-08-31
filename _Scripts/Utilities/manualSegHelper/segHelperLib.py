@@ -61,10 +61,8 @@ def sampleDicomData (sampleRate:float, dicomPath:str=input_folder_path, outputPa
 
 def samplePngData (sampleRate:float, pngPath:str, outputPath:str):
     path_list = [im_path for im_path in glob.glob(pngPath)]
-    print(path_list)
     path_list_parsed = [re.split('\\\\|\.', path) for path in path_list]
     path_list_parsed_valid = [x for x in path_list_parsed if x[-1] == 'png']
-    print(path_list_parsed_valid)
     path_list_parsed_valid = sorted(path_list_parsed_valid, key=lambda x:int(x[-2]))
     all_pngs = []
 
@@ -134,10 +132,8 @@ def createTrainingData (imageDicomPath:str=sampled_dicom_folder_path, maskDicomP
     
     if(usePng):
         path_list = [im_path for im_path in glob.glob(maskDicomPath)]
-        print(path_list)
         path_list_parsed = [re.split('\\\\|\.', path) for path in path_list]
         path_list_parsed_valid = [x for x in path_list_parsed if x[-1] == 'png']
-        print(path_list_parsed_valid)
         path_list_parsed_valid = sorted(path_list_parsed_valid, key=lambda x:int(x[-2]))
         all_masks = []
 
