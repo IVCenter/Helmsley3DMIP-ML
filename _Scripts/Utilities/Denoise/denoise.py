@@ -1,3 +1,4 @@
+import os
 from os import walk
 # for file names retrival
 import re as reg
@@ -268,7 +269,7 @@ def upsample_filter(afilter):
 
 # save_object(a_filter * getNumpyMasks('./2017_inner'), 'result')
 
-original = getNumpyMasks('./2017_inner')
+original = getNumpyMasks('./2017')
 
 hist = gen3DHistogram(original, texel_threshold)
 v, e = make_graph(hist, neighbor_distance, slice_levels)
@@ -288,5 +289,6 @@ for cc in ccs:
 a_filter = make_filter(target_cc, hist)
 a_filter = upsample_filter(a_filter)
 
-save_img_from_np(a_filter * getNumpyMasks('./2017_inner'), './2017_inner_post')
-save_object(a_filter * getNumpyMasks('./2017_inner'), 'result')
+os.system("mkdir ./2017_post")
+save_img_from_np(a_filter * getNumpyMasks('./2017'), './2017_post')
+save_object(a_filter * getNumpyMasks('./2017'), 'result')
