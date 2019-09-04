@@ -1,14 +1,8 @@
-import numpy as np 
-import os
-import skimage.io as io
-import skimage.transform as trans
 import tensorflow as tf
 import tensorflow.keras as keras    
 from tensorflow.keras.models import *
 from tensorflow.keras.layers import *
 from tensorflow.keras.optimizers import * 
-from tensorflow.keras.callbacks import ModelCheckpoint, LearningRateScheduler
-from tensorflow.keras import backend as keras
 from tensorflow.keras.layers import LeakyReLU, BatchNormalization
 from tensorflow.keras.utils import multi_gpu_model
 from tensorflow.keras.initializers import glorot_uniform 
@@ -16,7 +10,8 @@ from tensorflow.keras.initializers import glorot_uniform
 # This is the number of GPU you want to use
 G = 1  
 alpha=0.05
-def unet_batch_norm(pretrained_weights = False,input_size = (256,256,1), numLabels:int=2):
+def unet_batch_norm(numLabels:int, pretrained_weights = False,input_size = (256,256,1)):
+
     inputs = Input(input_size)
     conv1 = Conv2D(64, 3, activation = 'linear', padding = 'same', kernel_initializer = 'glorot_normal')(inputs)
     conv1 = LeakyReLU(alpha)(conv1)
@@ -96,7 +91,7 @@ def unet_batch_norm(pretrained_weights = False,input_size = (256,256,1), numLabe
     conv9 = BatchNormalization()(conv9)
     conv9 = Conv2D(numLabels, 3, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal')(conv9)
     conv9 = BatchNormalization()(conv9)
-    conv10 = Conv2D(3, 1, activation = 'sigmoid')(conv9)
+    conv10 = Conv2D(numLabels, 1, activation = 'sigmoid')(conv9)
     
     if(G == 1):
         cpuModel = None

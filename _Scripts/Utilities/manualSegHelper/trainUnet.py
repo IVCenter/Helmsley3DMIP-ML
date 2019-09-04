@@ -4,7 +4,7 @@ from data import *
 from test_model import *
 from tensorflow.python.client import device_lib
 
-def trainUnet(multiLabel:bool=False):
+def trainUnet(colorDict, multiLabel:bool=False):
 
 	if (multiLabel):
 		input_size = (256, 256, 3)
@@ -46,15 +46,15 @@ def trainUnet(multiLabel:bool=False):
 
 	save_path = save_folder + '/' + model_name + '.hdf5'
 
-	myGene = trainGenerator(4,'tmp',image_folder,label_folder,data_gen_args,save_to_dir = None, image_color_mode = color_mode, mask_color_mode = color_mode)
+	myGene = trainGenerator(4,'tmp',image_folder,label_folder,data_gen_args, colorDict, save_to_dir = None, image_color_mode = color_mode, mask_color_mode = color_mode)
 
 
-	model, cpuModel = unet_batch_norm(input_size=input_size)
+	model, cpuModel = unet_batch_norm(numLabels=len(colorDict), input_size=input_size)
 
 	'''
 	The training starts here.
 	'''
-	model.fit_generator(myGene,steps_per_epoch=4096,epochs=4)
+	model.fit_generator(myGene,steps_per_epoch=2048,epochs=2)
 
 	if(cpuModel):
 		cpuModel.save(save_path)

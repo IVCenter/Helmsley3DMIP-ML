@@ -8,7 +8,7 @@ from test_model import *
 from data import *
 from tensorflow.python.client import device_lib
 
-def testUnet(modelPath:str, multiLabel:bool=False):
+def testUnet(colorDict, modelPath:str, multiLabel:bool=False):
 	if(multiLabel):
 		as_gray = False
 		input_size = (256, 256, 3)
@@ -37,14 +37,13 @@ def testUnet(modelPath:str, multiLabel:bool=False):
 	Run the Test scripts
 	'''
 	testGene = testGenerator(input_folder,num_images, target_size=input_size, as_gray=as_gray)
-	model, cpuModel = unet_batch_norm(input_size=input_size)
+	model, cpuModel = unet_batch_norm(numLabels=len(colorDict), input_size=input_size)
 	model.load_weights(modelPath)
 
 	results = model.predict_generator(testGene,num_images,verbose=1)
 	'''
 	Save the results
 	'''
-	
 	try:
 		os.mkdir(output_folder)
 	except OSError:
@@ -52,7 +51,7 @@ def testUnet(modelPath:str, multiLabel:bool=False):
 	else:
 		print ("Successfully created the directory %s " % output_folder)
 
-	saveResult(output_folder,results)
+	saveResult(output_folder, results, num_class=len(colorDict), color_dict=colorDict)
 
 
 

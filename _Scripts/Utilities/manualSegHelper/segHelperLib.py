@@ -25,6 +25,7 @@ from PIL import Image
 import glob
 import re
 from sys import exit
+from color_dict import *
 
 input_folder_path = "./toSegment"
 sampled_dicom_folder_path = "./sampledDataset"
