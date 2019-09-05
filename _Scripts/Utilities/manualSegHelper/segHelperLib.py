@@ -34,7 +34,7 @@ sampled_label_folder_path = "./sampledLabel"
 systemTempPath = "./tmp"
 
 def sampleDicomData (sampleRate:float, dicomPath:str=input_folder_path, outputPath:str=sampled_dicom_folder_path):
-    all_dcms = [pydicom.read_file(dicomPath + '/' + f) for f in listdir(dicomPath) if isfile(join(dicomPath,f)) if f.endswith(".dcm")]
+    all_dcms = [pydicom.read_file(dicomPath + '/' + f, force=True) for f in listdir(dicomPath) if isfile(join(dicomPath,f)) if f.endswith(".dcm")]
     all_dcms.sort(key = lambda x: int(x[0x20, 0x32][1]))
     dcm_count = 0
 
