@@ -131,7 +131,7 @@ def geneTrainNpy(image_path,mask_path,flag_multi_class = False,num_class = 2,ima
 
 def labelVisualize(num_class,color_dict,item):
     img_out = np.zeros(item.shape[:2] + (3,))
-    threshold = 0.5
+    threshold = 0.0
 
     for i in range(num_class):
         # Find the category with the largest possibility of a pixel
