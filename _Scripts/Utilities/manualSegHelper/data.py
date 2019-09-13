@@ -23,6 +23,7 @@ def adjustData(img,mask,organ_color_dict):
     for i in range(len(organ_color_dict)):
         index = np.where(np.all(mask == organ_color_dict[i], axis = 3))
         new_mask[index[0], index[1], index[2], i] = 1
+        #sprint("Class", i, ":", len(index[0]))
 
     mask = new_mask
 
@@ -130,11 +131,17 @@ def geneTrainNpy(image_path,mask_path,flag_multi_class = False,num_class = 2,ima
 
 def labelVisualize(num_class,color_dict,item):
     img_out = np.zeros(item.shape[:2] + (3,))
+    threshold = 0.5
 
     for i in range(num_class):
-        # Find the category witht the largest possibility of a pixel
+        # Find the category with the largest possibility of a pixel
         index = np.where(np.argmax(item, axis=2) == i)
-        img_out[index[0], index[1]] = color_dict[i]
+        values = item[index[0], index[1], i]
+        selectIndex = np.where(values > threshold)
+        newIndex = [index[0][selectIndex], index[1][selectIndex]]
+        #print(values.shape)
+        img_out[newIndex[0], newIndex[1]] = color_dict[i]
+        print("Class", i, ":", len(index[0]))
 
     return img_out
 
@@ -144,7 +151,7 @@ def saveResult(save_path,npyfile,num_class:int, color_dict):
     for i,item in enumerate(npyfile):
         img = labelVisualize(num_class,color_dict,item) 
         img = img.astype('uint8')
-        io.imsave(os.path.join(save_path,"%d_predict.png"%i),img)
+        io.imsave(os.path.join(save_path,"%d.png"%i),img)
 
 
 

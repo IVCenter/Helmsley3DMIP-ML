@@ -54,7 +54,7 @@ def trainUnet(colorDict, multiLabel:bool=False):
 	'''
 	The training starts here.
 	'''
-	model.fit_generator(myGene,steps_per_epoch=2048,epochs=2)
+	model.fit_generator(myGene,steps_per_epoch=2048,epochs=3)
 
 	if(cpuModel):
 		cpuModel.save(save_path)

@@ -127,7 +127,7 @@ def createTrainingData (imageDicomPath:str=sampled_dicom_folder_path, maskDicomP
     else:
         print ("Successfully created the directory %s " % trainingMaskPath)
     
-    image_dcms = [pydicom.read_file(imageDicomPath + '/' + f) \
+    image_dcms = [pydicom.read_file(imageDicomPath + '/' + f, force=True) \
                   for f in listdir(imageDicomPath) if isfile(join(imageDicomPath,f)) if f.endswith(".dcm")]
     image_dcms.sort(key = lambda x: int(x[0x20, 0x32][1]))
     
@@ -157,6 +157,12 @@ def createTrainingData (imageDicomPath:str=sampled_dicom_folder_path, maskDicomP
     dcm_count = 0
 
     for image, mask in zip(image_dcms, all_masks):
+
+        image.file_meta.TransferSyntaxUID = pydicom.uid.ImplicitVRLittleEndian
+        
+        if(not usePng):
+            mask.file_meta.TransferSyntaxUID = pydicom.uid.ImplicitVRLittleEndian
+
         shape_image = image.pixel_array.shape
         # Convert to float to avoid overflow or underflow losses.
         image_image_2d = image.pixel_array.astype(float)
@@ -176,21 +182,23 @@ def createTrainingData (imageDicomPath:str=sampled_dicom_folder_path, maskDicomP
         if(not usePng):
             shape_mask = mask.pixel_array.shape
         
-            if(usePng or shape_image != shape_mask):
+            if(shape_image != shape_mask):
                 print("One or more dicom(s) of the image and the mask do(es) not agree. Abort!")
                 exit()
             mask_image_2d = mask.pixel_array.astype(float)
-            mask_2d_scaled = (np.maximum(mask_image_2d,0) / mask_image_2d.max()) * 255.0
-            mask_2d_scaled = np.uint8(mask_2d_scaled)
-            mask_output_name = trainingMaskPath + "/" + str(dcm_count) + ".png"
+            mask_image_2d[mask_image_2d > 0] = 255.0
+            #mask_2d_scaled = (np.maximum(mask_image_2d,0) / mask_image_2d.max()) * 255.0
 
-            with open(mask_output_name, 'wb') as png_file:
-                w = png.Writer(shape_mask[1], shape_mask[0], greyscale=True)
-                w.write(png_file, mask_2d_scaled)
+            mask_image_RGB = np.stack((mask_image_2d, mask_image_2d, mask_image_2d), axis=-1)
+            mask_image_RGB = np.uint8(mask_image_RGB)
+
+            mask_output_name = trainingMaskPath + "/" + str(dcm_count) + ".png"
+            img = Image.fromarray(mask_image_RGB, 'RGB')
+            img.save(mask_output_name)
+
         else:
             shape_mask = mask.shape
             img = Image.fromarray(mask, 'RGB')
-            
             mask_output_name = trainingMaskPath + "/" + str(dcm_count) + ".png"
             img.save(mask_output_name)
 
@@ -209,53 +217,17 @@ def createTestingData(imageDicomPath:str=input_folder_path):
     else:
         print ("Successfully created the directory %s " % testingImagePath)
     
-    image_dcms = [pydicom.read_file(imageDicomPath + '/' + f) \
+    image_dcms = [pydicom.read_file(imageDicomPath + '/' + f, force=True) \
                   for f in listdir(imageDicomPath) if isfile(join(imageDicomPath,f)) if f.endswith(".dcm")]
     image_dcms.sort(key = lambda x: int(x[0x20, 0x32][1]))
     
     dcm_count = 0
 
     for image in image_dcms:
-        shape_image = image.pixel_array.shape
 
-        # Convert to float to avoid overflow or underflow losses.
-        image_image_2d = image.pixel_array.astype(float)
+        # In case the dicom file does not contain certain meta tags
+        image.file_meta.TransferSyntaxUID = pydicom.uid.ImplicitVRLittleEndian
 
-        # Rescaling grey scale between 0-255
-        image_2d_scaled = (np.maximum(image_image_2d,0) / image_image_2d.max()) * 255.0
-
-        # Convert to uint
-        image_2d_scaled = np.uint8(image_2d_scaled)
-        
-        image_output_name = testingImagePath + "/" + str(dcm_count) + ".png"
-
-        # Write the PNG file
-        with open(image_output_name, 'wb') as png_file:
-            w = png.Writer(shape_image[1], shape_image[0], greyscale=True)
-            w.write(png_file, image_2d_scaled)
-
-        dcm_count += 1
-
-    print ("\n Done! Converted "+ str(dcm_count) + " images.")
-
-def createTestingData(imageDicomPath:str=input_folder_path):
-    print("Creating testing PNG files.")
-    testingImagePath = "./tmp/testingImage"
-    
-    try:
-        os.mkdir(testingImagePath)
-    except OSError:
-        print ("Creation of the directory %s failed" % testingImagePath)
-    else:
-        print ("Successfully created the directory %s " % testingImagePath)
-    
-    image_dcms = [pydicom.read_file(imageDicomPath + '/' + f) \
-                  for f in listdir(imageDicomPath) if isfile(join(imageDicomPath,f)) if f.endswith(".dcm")]
-    image_dcms.sort(key = lambda x: int(x[0x20, 0x32][1]))
-    
-    dcm_count = 0
-
-    for image in image_dcms:
         shape_image = image.pixel_array.shape
 
         # Convert to float to avoid overflow or underflow losses.
