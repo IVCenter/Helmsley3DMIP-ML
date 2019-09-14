@@ -131,17 +131,20 @@ def geneTrainNpy(image_path,mask_path,flag_multi_class = False,num_class = 2,ima
 
 def labelVisualize(num_class,color_dict,item):
     img_out = np.zeros(item.shape[:2] + (3,))
-    threshold = 0.0
+    threshold = 0.5
 
     for i in range(num_class):
         # Find the category with the largest possibility of a pixel
-        index = np.where(np.argmax(item, axis=2) == i)
-        values = item[index[0], index[1], i]
-        selectIndex = np.where(values > threshold)
-        newIndex = [index[0][selectIndex], index[1][selectIndex]]
+        classLoc = np.where(np.argmax(item, axis=2) == i)
+        img_out[classLoc[0], classLoc[1]] = color_dict[i]
+
+        confidenceValues = item[classLoc[0], classLoc[1], i]
+        unsureConfidenceIndex = np.where(confidenceValues < threshold)
+        unsurePtsLoc = [classLoc[0][unsureConfidenceIndex], classLoc[1][unsureConfidenceIndex]]
         #print(values.shape)
-        img_out[newIndex[0], newIndex[1]] = color_dict[i]
-        print("Class", i, ":", len(index[0]))
+        img_out[unsurePtsLoc[0], unsurePtsLoc[1]] = np.array([255, 255, 0])
+
+        #print("Class", i, ":", len(index[0]))
 
     return img_out
 
