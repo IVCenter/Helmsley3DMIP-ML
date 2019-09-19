@@ -1,3 +1,4 @@
+
 from distutils.core import setup
 
 '''
@@ -33,9 +34,10 @@ user_segmentation_folder_path = "./sampledDataset"
 sampled_label_folder_path = "./sampledLabel"
 systemTempPath = "./tmp"
 
-def sampleDicomData (sampleRate:float, dicomPath:str=input_folder_path, outputPath:str=sampled_dicom_folder_path):
+def sampleDicomData (sampleRate:float, sortingDirection:int, dicomPath:str=input_folder_path, outputPath:str=sampled_dicom_folder_path):
     all_dcms = [pydicom.read_file(dicomPath + '/' + f, force=True) for f in listdir(dicomPath) if isfile(join(dicomPath,f)) if f.endswith(".dcm")]
     all_dcms.sort(key = lambda x: int(x[0x20, 0x32][1]))
+    #print([x[0x20, 0x32] for x in all_dcms])
     dcm_count = 0
 
     if len(all_dcms) == 0:
@@ -53,6 +55,7 @@ def sampleDicomData (sampleRate:float, dicomPath:str=input_folder_path, outputPa
     
     sampleStep = math.floor(1/sampleRate)
     sampledData = all_dcms[::sampleStep]
+    sampledData.sort(key = lambda x: int(x[0x20, 0x32][2]))
     print("Sampling", len(sampledData), "dicom images.")
     name_counter = 0
     
@@ -98,7 +101,7 @@ def samplePngData (sampleRate:float, pngPath:str, outputPath:str):
         img.save(outputPath + '/' + str(name_counter) + '.png')
         name_counter += 1
 
-def createTrainingData (imageDicomPath:str=sampled_dicom_folder_path, maskDicomPath:str=sampled_label_folder_path, usePng:bool=False):
+def createTrainingData (sortingDirection:int, imageDicomPath:str=sampled_dicom_folder_path, maskDicomPath:str=sampled_label_folder_path, usePng:bool=False):
     print("Creating training PNG files.")
     systemTempPath = "./tmp"
     
@@ -206,7 +209,7 @@ def createTrainingData (imageDicomPath:str=sampled_dicom_folder_path, maskDicomP
 
     print ("\n Done! Converted "+ str(dcm_count) + " images and masks.")
 
-def createTestingData(imageDicomPath:str=input_folder_path):
+def createTestingData(sortingDirection:int, imageDicomPath:str=input_folder_path):
     print("Creating testing PNG files.")
     testingImagePath = "./tmp/testingImage"
     
@@ -219,7 +222,7 @@ def createTestingData(imageDicomPath:str=input_folder_path):
     
     image_dcms = [pydicom.read_file(imageDicomPath + '/' + f, force=True) \
                   for f in listdir(imageDicomPath) if isfile(join(imageDicomPath,f)) if f.endswith(".dcm")]
-    image_dcms.sort(key = lambda x: int(x[0x20, 0x32][1]))
+    image_dcms.sort(key = lambda x: int(x[0x20, 0x32][sortingDirection]))
     
     dcm_count = 0
 
