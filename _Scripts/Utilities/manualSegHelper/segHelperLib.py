@@ -36,8 +36,7 @@ systemTempPath = "./tmp"
 
 def sampleDicomData (sampleRate:float, sortingDirection:int, dicomPath:str=input_folder_path, outputPath:str=sampled_dicom_folder_path):
     all_dcms = [pydicom.read_file(dicomPath + '/' + f, force=True) for f in listdir(dicomPath) if isfile(join(dicomPath,f)) if f.endswith(".dcm")]
-    all_dcms.sort(key = lambda x: int(x[0x20, 0x32][1]))
-    #print([x[0x20, 0x32] for x in all_dcms])
+    all_dcms.sort(key = lambda x: int(x[0x20, 0x32][sortingDirection]))
     dcm_count = 0
 
     if len(all_dcms) == 0:
@@ -55,7 +54,6 @@ def sampleDicomData (sampleRate:float, sortingDirection:int, dicomPath:str=input
     
     sampleStep = math.floor(1/sampleRate)
     sampledData = all_dcms[::sampleStep]
-    sampledData.sort(key = lambda x: int(x[0x20, 0x32][2]))
     print("Sampling", len(sampledData), "dicom images.")
     name_counter = 0
     
@@ -132,7 +130,7 @@ def createTrainingData (sortingDirection:int, imageDicomPath:str=sampled_dicom_f
     
     image_dcms = [pydicom.read_file(imageDicomPath + '/' + f, force=True) \
                   for f in listdir(imageDicomPath) if isfile(join(imageDicomPath,f)) if f.endswith(".dcm")]
-    image_dcms.sort(key = lambda x: int(x[0x20, 0x32][1]))
+    image_dcms.sort(key = lambda x: int(x[0x20, 0x32][sortingDirection]))
     
     if(usePng):
         path_list = [im_path for im_path in glob.glob(maskDicomPath)]
