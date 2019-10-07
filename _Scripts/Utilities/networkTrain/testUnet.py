@@ -37,7 +37,7 @@ def testUnet(colorDict, modelPath:str, multiLabel:bool=False):
 	Run the Test scripts
 	'''
 	testGene = testGenerator(input_folder,num_images, target_size=input_size, as_gray=as_gray)
-	model, cpuModel = unet_batch_norm(numLabels=len(colorDict), input_size=input_size)
+	model, cpuModel = unet(numLabels=len(colorDict), input_size=input_size)
 	model.load_weights(modelPath)
 
 	results = model.predict_generator(testGene,num_images,verbose=1)

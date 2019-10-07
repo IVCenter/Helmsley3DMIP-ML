@@ -1,6 +1,4 @@
 
-from distutils.core import setup
-
 import numpy as np
 import png
 import pydicom
@@ -15,6 +13,7 @@ from PIL import Image
 import glob
 import re
 from sys import exit
+from collections import defaultdict
 from color_dict import *
 
 input_folder_path = "./toSegment"
@@ -23,7 +22,58 @@ user_segmentation_folder_path = "./sampledDataset"
 sampled_label_folder_path = "./sampledLabel"
 systemTempPath = "./tmp"
 
-def createTrainingData (sortingDirection:int):
+def getDataPaths():
+
+    dicomDataPaths = defaultdict(list)
+    maskDataPaths = defaultdict(list)
+
+    for root, dirs, files in os.walk(".\Dataset\\training", topdown=True):
+
+        for name in files:
+            pre, dataId = path.split(root)
+            pre, category = path.split(pre)
+
+            if(category == 'image'):
+                dicomDataPaths[dataId].append(path.join(root, name))
+            elif(category == 'mask'):
+                maskDataPaths[dataId].append(path.join(root, name))
+    
+    return dicomDataPaths, maskDataPaths
+
+def getDataArray(dicomPaths:dict, maskPaths:dict, sortingDirection:int):
+    
+    if(set(dicomPaths.keys()) != set(maskPaths.keys())):
+        print("Error! The series IDs between dicom paths and mask paths don't match.")
+        exit()
+    
+    dicomVolumes = defaultdict(list)
+    maskVolumes = defaultdict(list)
+    
+    for dataId in dicomPaths:
+        # Sort all the dicom fules according to the patient position and store them in an array
+        image_dcms = [pydicom.read_file(f, force=True) for f in dicomPaths[dataId] if f.endswith(".dcm")]
+        image_dcms.sort(key = lambda x: int(x[0x20, 0x32][sortingDirection]))
+        
+        # Sort all the pngs according their names and store them in an array
+        png_path_list = maskPaths[dataId]
+        path_list_pre_parsed = [path.split(p) for p in png_path_list]
+        path_list_parsed = [ [p[0]] + p[1].split(".") for p in path_list_pre_parsed]
+        path_list_parsed_valid = [x for x in path_list_parsed if x[-1] == 'png']
+        path_list_parsed_sorted = sorted(path_list_parsed_valid, key=lambda x:int(x[-2]))
+        path_list_pre_joined = [ [p[0]] + [(p[1] + (".png"))] for p in path_list_parsed_sorted]
+        path_list_joined = [path.join(p[0], p[1]) for p in path_list_pre_joined]
+        mask_pngs = [np.array(Image.open(s)) for s in path_list_joined]
+        
+        if(len(image_dcms) != len(mask_pngs)):
+            print("Error! The number of slices of the image dicoms does not agree with that of the mask dicoms. Abort!")
+            exit()
+            
+        dicomVolumes[dataId] = image_dcms
+        maskVolumes[dataId] = mask_pngs
+    
+    return dicomVolumes, maskVolumes
+
+def createTrainingData(dicomPaths:dict, maskPaths:dict, sortingDirection:int):
     print("Creating training PNG files.")
     systemTempPath = "./tmp"
     
@@ -52,86 +102,124 @@ def createTrainingData (sortingDirection:int):
     else:
         print ("Successfully created the directory %s " % trainingMaskPath)
     
-    image_dcms = [pydicom.read_file(imageDicomPath + '/' + f, force=True) \
-                  for f in listdir(imageDicomPath) if isfile(join(imageDicomPath,f)) if f.endswith(".dcm")]
-    image_dcms.sort(key = lambda x: int(x[0x20, 0x32][sortingDirection]))
+    dicomVol, maskVol = getDataArray(dicomPaths, maskPaths, sortingDirection)
+    slice_count = 0
     
-    if(usePng):
-        path_list = [im_path for im_path in glob.glob(maskDicomPath)]
-        path_list_parsed = [re.split('\\\\|\.', path) for path in path_list]
-        path_list_parsed_valid = [x for x in path_list_parsed if x[-1] == 'png']
-        path_list_parsed_valid = sorted(path_list_parsed_valid, key=lambda x:int(x[-2]))
-        all_masks = []
+    for dataId in dicomVol:
+        print("Processing data series", dataId)
+        
+        for image, mask in zip(dicomVol[dataId], maskVol[dataId]):
+            image.file_meta.TransferSyntaxUID = pydicom.uid.ImplicitVRLittleEndian
+            shape_image = image.pixel_array.shape
+            
+            # Convert to float to avoid overflow or underflow losses.
+            image_image_2d = image.pixel_array.astype(float)
 
-        for path in path_list_parsed_valid:
-            s = "\\"
-            path = [f for f in path if f != '']
-            s = s.join(path)
-            s = s[:-4] + '.png'
-            imageArray = np.array(Image.open(s))
-            all_masks.append(imageArray)
+            # Rescaling grey scale between 0-255
+            image_2d_scaled = (np.maximum(image_image_2d,0) / image_image_2d.max()) * 255.0
+
+            # Convert to uint
+            image_2d_scaled = np.uint8(image_2d_scaled)
+            
+            if(image_2d_scaled.shape != mask.shape):
+                print("Error. Shape difference.", image_2d_scaled.shape, mask.shape)
+
+            tileN = 4
+            tileSmri = int(image_2d_scaled.shape[0]/tileN)
+            tileSmask = int(mask.shape[0]/tileN)
+
+            for i in range(tileN):
+                for j in range(tileN):
+                    mri_tile = image_2d_scaled[i*tileSmri:(i+1)*tileSmri, j*tileSmri:(j+1)*tileSmri]
+                    mask_tile = mask[i*tileSmask:(i+1)*tileSmask, j*tileSmask:(j+1)*tileSmask]
+
+                    image_output_name = trainingImagePath + "/" + format(slice_count, '05d') + ".png"
+                    # Write the PNG file
+                    mri_img = Image.fromarray(mri_tile, 'L')
+                    mri_img.save(image_output_name)
+
+                    shape_mask = mask.shape
+                    mask_img = Image.fromarray(mask_tile)
+                    mask_output_name = trainingMaskPath + "/" + format(slice_count, '05d') + ".png"
+                    mask_img.save(mask_output_name)
+
+                    slice_count += 1
+
+def createMixedTrainingData(dicomPaths:dict, maskPaths:dict, sortingDirection:int):
+    print("Creating training PNG files.")
+    systemTempPath = "./tmp"
+    
+    try:
+        os.mkdir(systemTempPath)
+    except OSError:
+        print ("Creation of the directory %s failed" % systemTempPath)
     else:
-        all_masks = [pydicom.read_file(maskDicomPath + '/' + f) \
-                  for f in listdir(maskDicomPath) if isfile(join(maskDicomPath,f)) if f.endswith(".dcm")]
-        all_masks.sort(key = lambda x: int(x[0x20, 0x32][1]))
+        print ("Successfully created the directory %s " % systemTempPath)
+
+    trainingImagePath = "./tmp/trainingImage"
     
-    if(len(image_dcms) != len(all_masks)):
-        print("Error! The number of slices of the image dicoms does not agree with that of the mask dicoms. Abort!")
-        exit()
+    try:
+        os.mkdir(trainingImagePath)
+    except OSError:
+        print ("Creation of the directory %s failed" % trainingImagePath)
+    else:
+        print ("Successfully created the directory %s " % trainingImagePath)
+        
+    trainingMaskPath = "./tmp/trainingMask"
     
-    dcm_count = 0
-
-    for image, mask in zip(image_dcms, all_masks):
-
-        image.file_meta.TransferSyntaxUID = pydicom.uid.ImplicitVRLittleEndian
+    try:
+        os.mkdir(trainingMaskPath)
+    except OSError:
+        print ("Creation of the directory %s failed" % trainingMaskPath)
+    else:
+        print ("Successfully created the directory %s " % trainingMaskPath)
+    
+    dicomVol, maskVol = getDataArray(dicomPaths, maskPaths, sortingDirection)
+    slice_count = 0
+    
+    for dataId in dicomVol:
+        print("Processing data series", dataId)
         
-        if(not usePng):
-            mask.file_meta.TransferSyntaxUID = pydicom.uid.ImplicitVRLittleEndian
+        for image, mask in zip(dicomVol[dataId], maskVol[dataId]):
+            image.file_meta.TransferSyntaxUID = pydicom.uid.ImplicitVRLittleEndian
+            shape_image = image.pixel_array.shape
+            
+            # Convert to float to avoid overflow or underflow losses.
+            image_image_2d = image.pixel_array.astype(float)
 
-        shape_image = image.pixel_array.shape
-        # Convert to float to avoid overflow or underflow losses.
-        image_image_2d = image.pixel_array.astype(float)
+            # Rescaling grey scale between 0-255
+            image_2d_scaled = (np.maximum(image_image_2d,0) / image_image_2d.max()) * 255.0
 
-        # Rescaling grey scale between 0-255
-        image_2d_scaled = (np.maximum(image_image_2d,0) / image_image_2d.max()) * 255.0
+            # Convert to uint
+            image_2d_scaled = np.uint8(image_2d_scaled)
+            
+            if(image_2d_scaled.shape != mask.shape):
+                print("Error. Shape difference.", image_2d_scaled.shape, mask.shape)
 
-        # Convert to uint
-        image_2d_scaled = np.uint8(image_2d_scaled)
-        
-        image_output_name = trainingImagePath + "/" + str(dcm_count) + ".png"
-        # Write the PNG file
-        with open(image_output_name, 'wb') as png_file:
-            w = png.Writer(shape_image[1], shape_image[0], greyscale=True)
-            w.write(png_file, image_2d_scaled)
+            tileN = 4
+            tileSmri = int(image_2d_scaled.shape[0]/tileN)
+            tileSmask = int(mask.shape[0]/tileN)
 
-        if(not usePng):
-            shape_mask = mask.pixel_array.shape
-        
-            if(shape_image != shape_mask):
-                print("One or more dicom(s) of the image and the mask do(es) not agree. Abort!")
-                exit()
-            mask_image_2d = mask.pixel_array.astype(float)
-            mask_image_2d[mask_image_2d > 0] = 255.0
-            #mask_2d_scaled = (np.maximum(mask_image_2d,0) / mask_image_2d.max()) * 255.0
+            for i in range(tileN):
+                for j in range(tileN):
+                    mri_tile = image_2d_scaled[i*tileSmri:(i+1)*tileSmri, j*tileSmri:(j+1)*tileSmri]
+                    mask_tile = mask[i*tileSmask:(i+1)*tileSmask, j*tileSmask:(j+1)*tileSmask]
 
-            mask_image_RGB = np.stack((mask_image_2d, mask_image_2d, mask_image_2d), axis=-1)
-            mask_image_RGB = np.uint8(mask_image_RGB)
+                    image_output_name = trainingImagePath + "/" + format(slice_count, '05d') + ".png"
+                    # Write the PNG file
+                    mri_img = Image.fromarray(mri_tile, 'L')
+                    mri_img.save(image_output_name)
 
-            mask_output_name = trainingMaskPath + "/" + str(dcm_count) + ".png"
-            img = Image.fromarray(mask_image_RGB, 'RGB')
-            img.save(mask_output_name)
+                    shape_mask = mask.shape
+                    mask_img = Image.fromarray(mask_tile)
+                    mask_output_name = trainingMaskPath + "/" + format(slice_count, '05d') + ".png"
+                    mask_img.save(mask_output_name)
 
-        else:
-            shape_mask = mask.shape
-            img = Image.fromarray(mask, 'RGB')
-            mask_output_name = trainingMaskPath + "/" + str(dcm_count) + ".png"
-            img.save(mask_output_name)
+                    slice_count += 1
 
-        dcm_count += 1
-
-    print ("\n Done! Converted "+ str(dcm_count) + " images and masks.")
-
-def createTestingData(sortingDirection:int, imageDicomPath:str=input_folder_path):
+def createTestingData(sortingDirection:int, testSeriesName:str, imageDicomBasePath:str="./Dataset/testing/"):
+    imageDicomPath = imageDicomBasePath + testSeriesName
+    
     print("Creating testing PNG files.")
     testingImagePath = "./tmp/testingImage"
     

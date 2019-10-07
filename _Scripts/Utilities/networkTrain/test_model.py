@@ -12,7 +12,7 @@ from tensorflow.keras import regularizers
 G = 1  
 alpha=0.05
 beta = 0.01
-def unet_batch_norm(numLabels:int, pretrained_weights = False,input_size = (256,256,1)):
+def unet(numLabels:int, pretrained_weights = False,input_size = (256,256,1)):
 
     inputs = Input(input_size)
     conv1 = Conv2D(64, 3, activation = 'linear', padding = 'same', kernel_initializer = 'glorot_normal', kernel_regularizer=regularizers.l2(beta))(inputs)
@@ -112,3 +112,101 @@ def unet_batch_norm(numLabels:int, pretrained_weights = False,input_size = (256,
 
     #if(pretrained_weights):
     #	model.load_weights(pretrained_weights)
+
+def autoencoder1_2(input_size=(512, 512, 1)):
+
+    input_img = Input(shape=input_size)  # adapt this if using `channels_first` image data format
+
+    x = Conv2D(128, (3, 3), activation='linear', padding='same')(input_img)
+    x = LeakyReLU(0.2)(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(128, (3, 3), activation='linear', padding='same')(input_img)
+    x = LeakyReLU(0.2)(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(128, (3, 3), activation='linear', padding='same')(x)
+    x = LeakyReLU(0.2)(x)
+    x = BatchNormalization()(x)
+
+    x = MaxPooling2D((2, 2), padding='same')(x)
+
+    x = Conv2D(256, (3, 3), activation='linear', padding='same')(x)
+    x = LeakyReLU(0.2)(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(256, (3, 3), activation='linear', padding='same')(x)
+    x = LeakyReLU(0.2)(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(256, (3, 3), activation='linear', padding='same')(x)
+    x = LeakyReLU(0.2)(x)
+    x = BatchNormalization()(x)
+
+    x = MaxPooling2D((2, 2), padding='same')(x)
+    
+    x = Conv2D(512, (3, 3), activation='linear', padding='same')(x)
+    x = LeakyReLU(0.2)(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(512, (3, 3), activation='linear', padding='same')(x)
+    x = LeakyReLU(0.2)(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(512, (3, 3), activation='linear', padding='same')(x)
+    x = LeakyReLU(0.2)(x)
+    x = BatchNormalization()(x)
+
+    x = MaxPooling2D((2, 2), padding='same')(x)
+
+    x = Conv2D(1024, (3, 3), activation='linear', padding='same')(x)
+    x = LeakyReLU(0.2)(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(1024, (3, 3), activation='linear', padding='same')(x)
+    x = LeakyReLU(0.2)(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(1024, (3, 3), activation='linear', padding='same')(x)
+    x = LeakyReLU(0.2)(x)
+    x = BatchNormalization()(x)
+
+    x = SpatialDropout2D(0.5)(x)
+
+    # at this point the representation is (4, 4, 8) i.e. 128-dimensional
+
+    x = Conv2D(512, (3, 3), activation='relu', padding='same')(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(512, (3, 3), activation='relu', padding='same')(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(512, (3, 3), activation='relu', padding='same')(x)
+    x = BatchNormalization()(x)
+
+    x = UpSampling2D((2, 2))(x)
+
+    x = Conv2D(256, (3, 3), activation='relu', padding='same')(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(256, (3, 3), activation='relu', padding='same')(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(256, (3, 3), activation='relu', padding='same')(x)
+    x = BatchNormalization()(x)
+
+    x = UpSampling2D((2, 2))(x)
+
+    x = Conv2D(128, (3, 3), activation='relu', padding='same')(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(128, (3, 3), activation='relu', padding='same')(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(128, (3, 3), activation='relu', padding='same')(x)
+    x = BatchNormalization()(x)
+
+    x = UpSampling2D((2, 2))(x)
+
+    decoded = Conv2D(1, 3, activation='sigmoid', padding='same')(x)
+
+    
+    if(G == 1):
+        cpuModel = None
+        model = Model(inputs = input_img, outputs = decoded)
+        model.compile(optimizer='RMSprop', loss='mean_squared_error')
+        print(model.summary()) 
+    else:
+        with tf.device("/cpu:0"):
+            cpuModel = Model(inputs = inputs, outputs = conv10)
+            print(cpuModel.summary())
+        
+        model = multi_gpu_model(cpuModel, gpus=G)
+        model.compile(optimizer='RMSprop', loss='mean_squared_error')
+    return model, cpuModel
