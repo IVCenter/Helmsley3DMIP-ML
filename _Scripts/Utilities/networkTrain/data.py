@@ -105,7 +105,7 @@ def trainGeneratorRGB(batch_size,train_path,image_folder,mask_folder,aug_dict,im
 
 def testGenerator(test_path,num_image = 30,target_size = (256,256),flag_multi_class = False,as_gray = True):
     for i in range(num_image):
-        img = io.imread(os.path.join(test_path,"%d.png"%i),as_gray = as_gray)
+        img = io.imread(os.path.join(test_path,format(i, '05d') + '.png'),as_gray = as_gray)
         img = img / 255
         img = trans.resize(img,target_size)
         img = np.reshape(img,(1,)+img.shape)
@@ -150,11 +150,11 @@ def labelVisualize(num_class,color_dict,item):
 
 
 
-def saveResult(save_path,npyfile,num_class:int, color_dict):
+def saveResult(save_path,npyfile,num_class:int, color_dict, img_size):
     for i,item in enumerate(npyfile):
         img = labelVisualize(num_class,color_dict,item) 
         img = img.astype('uint8')
-        img = trans.resize(img, (512, 512))
+        img = trans.resize(img, img_size)
         io.imsave(os.path.join(save_path,"%d.png"%i),img)
 
 

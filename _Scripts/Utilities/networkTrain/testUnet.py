@@ -8,13 +8,8 @@ from test_model import *
 from data import *
 from tensorflow.python.client import device_lib
 
-def testUnet(colorDict, modelPath:str, multiLabel:bool=False):
-	if(multiLabel):
-		as_gray = False
-		input_size = (256, 256, 3)
-	else:
-		as_gray = True
-		input_size = (256, 256, 1)
+def testUnet(colorDict, modelPath:str, input_size):
+
 	print(device_lib.list_local_devices())
 
 	'''
@@ -36,7 +31,7 @@ def testUnet(colorDict, modelPath:str, multiLabel:bool=False):
 	'''
 	Run the Test scripts
 	'''
-	testGene = testGenerator(input_folder,num_images, target_size=input_size, as_gray=as_gray)
+	testGene = testGenerator(input_folder,num_images, target_size=input_size, as_gray=False)
 	model, cpuModel = unet(numLabels=len(colorDict), input_size=input_size)
 	model.load_weights(modelPath)
 
@@ -51,7 +46,7 @@ def testUnet(colorDict, modelPath:str, multiLabel:bool=False):
 	else:
 		print ("Successfully created the directory %s " % output_folder)
 
-	saveResult(output_folder, results, num_class=len(colorDict), color_dict=colorDict)
+	saveResult(output_folder, results, num_class=len(colorDict), color_dict=colorDict, img_size=input_size[:2])
 
 
 

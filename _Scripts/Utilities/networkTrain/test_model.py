@@ -95,6 +95,16 @@ def unet(numLabels:int, pretrained_weights = False,input_size = (256,256,1)):
     conv9 = BatchNormalization()(conv9)
     conv10 = Conv2D(numLabels, 1, activation = 'sigmoid')(conv9)
     
+    # Define custom loss
+    def custom_loss(layer):
+
+        # Create a loss function that adds the MSE loss to the mean of all squared activations of a specific layer
+        def loss(y_true,y_pred):
+            return K.mean(K.square(y_pred - y_true) + K.square(layer), axis=-1)
+    
+        # Return a function
+    return loss
+
     if(G == 1):
         cpuModel = None
         model = Model(inputs = inputs, outputs = conv10)
