@@ -221,3 +221,45 @@ def pruneSystem():
         shutil.rmtree(systemTempPath)
     except OSError:
         print ("Deleting directory %s failed" % systemTempPath)
+
+def combineTiles(inputpath:str, tileN:int):
+    testImagePath = "./testCombine"
+    png_path_list = []
+
+    for root, dirs, files in os.walk(inputpath, topdown=True):
+
+        for name in files:
+            png_path_list.append(path.join(root, name))
+        
+        # Sort all the pngs according their names and store them in an array
+        path_list_pre_parsed = [path.split(p) for p in png_path_list]
+        path_list_parsed = [ [p[0]] + p[1].split(".") for p in path_list_pre_parsed]
+        path_list_parsed_valid = [x for x in path_list_parsed if x[-1] == 'png']
+        path_list_parsed_sorted = sorted(path_list_parsed_valid, key=lambda x:int(x[-2]))
+        path_list_pre_joined = [ [p[0]] + [(p[1] + (".png"))] for p in path_list_parsed_sorted]
+        path_list_joined = [path.join(p[0], p[1]) for p in path_list_pre_joined]
+        tile_pngs = [np.array(Image.open(s)) for s in path_list_joined]
+        print(tile_pngs[0].shape)
+        tile_length = tile_pngs[0].shape[0]
+
+        output_shape = (tile_length*4, tile_length*4, 3)
+        sliceCount = 0
+
+        for count in range(int(len(tile_pngs)/(tileN**2))):
+            
+            mask_tiles = tile_pngs[count*tileN**2:(count+1)*tileN**2]
+            outputImage = np.zeros(output_shape)
+
+            for i in range(tileN):
+                for j in range(tileN):
+                    outputImage[i*tile_length:(i+1)*tile_length, j*tile_length:(j+1)*tile_length] = mask_tiles[i * tileN + j]
+
+            image_output_name = testImagePath + "/" + format(sliceCount, '05d') + ".png"
+            print(outputImage.shape)
+            # Write the PNG file
+            mri_img = Image.fromarray(outputImage.astype('uint8'))
+            mri_img.save(image_output_name)
+            sliceCount += 1
+
+
+            
