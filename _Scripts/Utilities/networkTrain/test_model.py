@@ -138,7 +138,7 @@ def unet(numLabels:int, pretrained_weights = False,input_size = (256,256,1)):
     if(G == 1):
         cpuModel = None
         model = Model(inputs = inputs, outputs = conv10)
-        model.compile(optimizer = Adam(lr = 1e-4), loss = WeightedBinaryCrossEntropy(2, 1), metrics = ['accuracy'])
+        model.compile(optimizer = Adam(lr = 1e-4), loss = WeightedBinaryCrossEntropy(1.5, 1), metrics = ['accuracy'])
         print(model.summary()) 
     else:
         with tf.device("/cpu:0"):
@@ -146,7 +146,7 @@ def unet(numLabels:int, pretrained_weights = False,input_size = (256,256,1)):
             print(cpuModel.summary())
         
         model = multi_gpu_model(cpuModel, gpus=G)
-        model.compile(optimizer = Adam(lr = 1e-4), loss = WeightedBinaryCrossEntropy(2, 1), metrics = ['accuracy'])
+        model.compile(optimizer = Adam(lr = 1e-4), loss = WeightedBinaryCrossEntropy(1.5, 1), metrics = ['accuracy'])
         
     return model, cpuModel
 
