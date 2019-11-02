@@ -104,9 +104,50 @@ def createTrainingData(dicomPaths:dict, maskPaths:dict, sortingDirection:int, ti
     dicomVol, maskVol = getDataArray(dicomPaths, maskPaths, sortingDirection)
     slice_count = 0
 
+    dicomTrainArray = None
+    maskTrainArray = None
+
     for dataId in dicomVol:
         print("Processing data series", dataId)
 
+        dicomTrainArrayTemp = np.zeros( (len(dicomVol[dataId]),) + (512, 512) )
+        maskTrainArrayTemp = np.zeros( (len(dicomVol[dataId]),) + (512, 512, 3) )
+
+        for i in range(len(dicomVol[dataId])):
+            # Processing each dicom file
+            dicomVol[dataId][i].file_meta.TransferSyntaxUID = pydicom.uid.ImplicitVRLittleEndian
+            image = dicomVol[dataId][i].pixel_array
+            image = image.astype(float)
+            image = (np.maximum(image,0) / image.max()) * 255.0
+            dicomTrainArrayTemp[i] = image
+
+            # Processing each mask png file
+            mask = Image.fromarray( maskVol[dataId][i], 'RGB')
+            mask = mask.resize((512, 512), 0)
+            maskTrainArrayTemp[i] = mask
+
+
+        if(dicomTrainArray is None):
+            dicomTrainArray = dicomTrainArrayTemp
+            maskTrainArray = maskTrainArrayTemp
+        
+        else:
+            dicomTrainArray = np.concatenate((dicomTrainArray, dicomTrainArrayTemp))
+            maskTrainArray = np.concatenate((maskTrainArray, maskTrainArrayTemp))
+        
+        print(dicomTrainArray.shape, maskTrainArray.shape)
+    
+    dicomTrainArray = dicomTrainArray.reshape(dicomTrainArray.shape + (1,))
+    print(dicomTrainArray.shape)
+    dicom_output_name = trainingImagePath + "/dicoms.npy" 
+    mask_output_name = trainingMaskPath + "/masks.npy" 
+
+    np.save(dicom_output_name, dicomTrainArray)
+    np.save(mask_output_name, mask_output_name)
+
+    return (dicomTrainArray, maskTrainArray)
+
+    '''
         black_mask = 0
         white_mask = 0
         
@@ -136,7 +177,6 @@ def createTrainingData(dicomPaths:dict, maskPaths:dict, sortingDirection:int, ti
                     else:
                         black_mask += 1
                     
-
                     image_output_name = trainingImagePath + "/" + format(slice_count, '05d') + ".png"
                     # Write the PNG file
                     mri_img = Image.fromarray(mri_tile, 'L')
@@ -150,9 +190,8 @@ def createTrainingData(dicomPaths:dict, maskPaths:dict, sortingDirection:int, ti
                     slice_count += 1
             
         print(black_mask, white_mask)
+    '''
             
-            
-
 def createTestingData(sortingDirection:int, testSeriesName:str, imageDicomBasePath:str="./Dataset/testing/", tileN:int=1):
     imageDicomPath = imageDicomBasePath + testSeriesName
     
@@ -169,7 +208,23 @@ def createTestingData(sortingDirection:int, testSeriesName:str, imageDicomBasePa
     image_dcms = [pydicom.read_file(imageDicomPath + '/' + f, force=True) \
                   for f in listdir(imageDicomPath) if isfile(join(imageDicomPath,f)) if f.endswith(".dcm")]
     image_dcms.sort(key = lambda x: int(x[0x20, 0x32][sortingDirection]))
-    
+
+    dicomTestArray = np.zeros( (len(image_dcms),) + (512, 512) )
+
+    for i in range(len(image_dcms)):
+
+        # Processing each dicom file
+        image_dcms[i].file_meta.TransferSyntaxUID = pydicom.uid.ImplicitVRLittleEndian
+        image = image_dcms[i].pixel_array
+        image = image.astype(float)
+        image = (np.maximum(image,0) / image.max()) * 255.0
+        dicomTestArray[i] = image
+
+    dicomTestArray = dicomTestArray.reshape(dicomTestArray.shape + (1,))
+    print(dicomTestArray.shape)
+    return dicomTestArray
+    '''
+
     slice_count = 0
 
     for image in image_dcms:
@@ -201,8 +256,9 @@ def createTestingData(sortingDirection:int, testSeriesName:str, imageDicomBasePa
                 mri_img.save(image_output_name)
 
                 slice_count += 1
-
+    
     print ("\n Done! Converted "+ str(slice_count) + " images.")
+    '''
 
 def pruneSystem():
 
@@ -260,6 +316,84 @@ def combineTiles(inputpath:str, tileN:int):
             mri_img = Image.fromarray(outputImage.astype('uint8'))
             mri_img.save(image_output_name)
             sliceCount += 1
+
+def create3dTrainingData():
+    systemTempPath = "./tmp"
+    
+    try:
+        os.mkdir(systemTempPath)
+    except OSError:
+        print ("Creation of the directory %s failed" % systemTempPath)
+    else:
+        print ("Successfully created the directory %s " % systemTempPath)
+
+    trainingImagePath = "./tmp/trainingImage"
+    
+    try:
+        os.mkdir(trainingImagePath)
+    except OSError:
+        print ("Creation of the directory %s failed" % trainingImagePath)
+    else:
+        print ("Successfully created the directory %s " % trainingImagePath)
+        
+    trainingMaskPath = "./tmp/trainingMask"
+    
+    try:
+        os.mkdir(trainingMaskPath)
+    except OSError:
+        print ("Creation of the directory %s failed" % trainingMaskPath)
+    else:
+        print ("Successfully created the directory %s " % trainingMaskPath)
+    
+    dicomVol, maskVol = getDataArray(dicomPaths, maskPaths, sortingDirection)
+    slice_count = 0
+
+    for dataId in dicomVol:
+        print("Processing data series", dataId)
+
+        black_mask = 0
+        white_mask = 0
+        
+        for image, mask in zip(dicomVol[dataId], maskVol[dataId]):
+            image.file_meta.TransferSyntaxUID = pydicom.uid.ImplicitVRLittleEndian
+            shape_image = image.pixel_array.shape
+            
+            # Convert to float to avoid overflow or underflow losses.
+            image_image_2d = image.pixel_array.astype(float)
+
+            # Rescaling grey scale between 0-255
+            image_2d_scaled = (np.maximum(image_image_2d,0) / image_image_2d.max()) * 255.0
+
+            # Convert to uint
+            image_2d_scaled = np.uint8(image_2d_scaled)
+
+            tileSmri = int(image_2d_scaled.shape[0]/tileN)
+            tileSmask = int(mask.shape[0]/tileN)
+        
+            for i in range(tileN):
+                for j in range(tileN):
+                    mri_tile = image_2d_scaled[i*tileSmri:(i+1)*tileSmri, j*tileSmri:(j+1)*tileSmri]
+                    mask_tile = mask[i*tileSmask:(i+1)*tileSmask, j*tileSmask:(j+1)*tileSmask]
+                    
+                    if (np.any(mask_tile)):
+                        white_mask += 1
+                    else:
+                        black_mask += 1
+                    
+                    image_output_name = trainingImagePath + "/" + format(slice_count, '05d') + ".png"
+                    # Write the PNG file
+                    mri_img = Image.fromarray(mri_tile, 'L')
+                    mri_img.save(image_output_name)
+
+                    shape_mask = mask.shape
+                    mask_img = Image.fromarray(mask_tile)
+                    mask_output_name = trainingMaskPath + "/" + format(slice_count, '05d') + ".png"
+                    mask_img.save(mask_output_name)
+
+                    slice_count += 1
+            
+        print(black_mask, white_mask)
+
 
 
             

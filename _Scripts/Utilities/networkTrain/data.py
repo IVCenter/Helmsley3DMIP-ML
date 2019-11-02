@@ -6,10 +6,10 @@ import glob
 import skimage.io as io
 import skimage.transform as trans
 from sys import exit
+from PIL import Image, ImageEnhance 
 
 
-def adjustData(img,mask,organ_color_dict):
-    
+def adjustData(img,mask,organ_color_dict,sample_step):
     img = img / 255
 
     if(mask.shape[-1] != 3):
@@ -27,12 +27,16 @@ def adjustData(img,mask,organ_color_dict):
 
     mask = new_mask
 
-    return (img,mask)
+    return (img[:, ::sample_step, ::sample_step, :],mask[:, ::sample_step, ::sample_step, :])
 
+def contrastAdjust(img):
+    enhancer = ImageEnhance.Contrast(img)
+    enhancer.enhance(factor)
+    img_adapteq = exposure.equalize_adapthist(img, clip_limit=0.03)
+    return img_adapteq
 
-
-def trainGenerator(batch_size,train_path,image_folder,mask_folder,aug_dict,organ_color_dict, image_color_mode = "grayscale",
-                    mask_color_mode = "grayscale",image_save_prefix  = "image",mask_save_prefix  = "mask",
+def trainGenerator(batch_size,train_path,image_folder,mask_folder,aug_dict,organ_color_dict, image_color_mode = "rgb",
+                    mask_color_mode = "rgb",image_save_prefix  = "image",mask_save_prefix  = "mask",
                     multi_label = False,num_class = 2,save_to_dir = None,target_size = (256,256),seed = 1):
     '''
     can generate image and mask at the same time
@@ -62,13 +66,12 @@ def trainGenerator(batch_size,train_path,image_folder,mask_folder,aug_dict,organ
         save_prefix  = mask_save_prefix,
         seed = seed)
     train_generator = zip(image_generator, mask_generator)
+
     for (img,mask) in train_generator:
         img,mask = adjustData(img,mask, organ_color_dict)
         yield (img,mask)
 
-def trainGeneratorRGB(batch_size,train_path,image_folder,mask_folder,aug_dict,image_color_mode = "rgb",
-                    mask_color_mode = "grayscale",image_save_prefix  = "image",mask_save_prefix  = "mask",
-                    flag_multi_class = False,num_class = 2,save_to_dir = "temp\\",target_size = (256,256),seed = 1):
+def trainGeneratorTest(batch_size, x, y, aug_dict,organ_color_dict,target_size = (256,256),seed = 1):
     '''
     can generate image and mask at the same time
     use the same seed for image_datagen and mask_datagen to ensure the transformation for image and mask is the same
@@ -76,36 +79,33 @@ def trainGeneratorRGB(batch_size,train_path,image_folder,mask_folder,aug_dict,im
     '''
     image_datagen = ImageDataGenerator(**aug_dict)
     mask_datagen = ImageDataGenerator(**aug_dict)
-    image_generator = image_datagen.flow_from_directory(
-        train_path,
-        classes = [image_folder],
-        class_mode = None,
-        color_mode = image_color_mode,
-        target_size = target_size,
+    image_generator = image_datagen.flow(
+        x,
         batch_size = batch_size,
-        save_to_dir = save_to_dir,
-        save_prefix  = image_save_prefix,
         seed = seed)
-    mask_generator = mask_datagen.flow_from_directory(
-        train_path,
-        classes = [mask_folder],
-        class_mode = None,
-        color_mode = mask_color_mode,
-        target_size = target_size,
+    mask_generator = mask_datagen.flow(
+        y,
         batch_size = batch_size,
-        save_to_dir = save_to_dir,
-        save_prefix  = mask_save_prefix,
         seed = seed)
-    train_generator = zip(image_generator, mask_generator)
-    for (img,mask) in train_generator:
-        img,mask = adjustData(img,mask,flag_multi_class,num_class)
-        yield (img,mask)
 
+    train_generator = zip(image_generator, mask_generator)
+
+    for (img,mask) in train_generator:
+        img,mask = adjustData(img,mask, organ_color_dict, 2)
+        yield (img,mask)
 
 
 def testGenerator(test_path,num_image = 30,target_size = (256,256),flag_multi_class = False,as_gray = True):
     for i in range(num_image):
         img = io.imread(os.path.join(test_path,format(i, '05d') + '.png'),as_gray = as_gray)
+        img = img / 255
+        img = trans.resize(img,target_size)
+        img = np.reshape(img,(1,)+img.shape)
+        yield img
+
+def testGeneratorTest(testX,target_size = (256,256)):
+    for i in range(len(testX)):
+        img = testX[i]
         img = img / 255
         img = trans.resize(img,target_size)
         img = np.reshape(img,(1,)+img.shape)

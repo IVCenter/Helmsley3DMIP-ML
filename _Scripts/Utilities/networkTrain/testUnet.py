@@ -8,7 +8,7 @@ from test_model import *
 from data import *
 from tensorflow.python.client import device_lib
 
-def testUnet(colorDict, modelPath:str, input_size):
+def testUnet(colorDict, modelPath:str, input_size, trainX):
 
 	print(device_lib.list_local_devices())
 
@@ -31,7 +31,7 @@ def testUnet(colorDict, modelPath:str, input_size):
 	'''
 	Run the Test scripts
 	'''
-	testGene = testGenerator(input_folder,num_images, target_size=input_size, as_gray=False)
+	testGene = testGeneratorTest(trainX, target_size=input_size)
 	model, cpuModel = unet(numLabels=len(colorDict), input_size=input_size)
 	model.load_weights(modelPath)
 

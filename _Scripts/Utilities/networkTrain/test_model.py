@@ -49,8 +49,12 @@ class WeightedBinaryCrossEntropy(keras.losses.Loss):
 
 
 # This is the number of GPU you want to use
-G = 1  
+G = 1
+
+# Coefficient for the leaky reLU activations 
 alpha=0.05
+
+# Coefficient for the l2 regularizer 
 beta = 0.01
 def unet(numLabels:int, pretrained_weights = False,input_size = (256,256,1)):
 
@@ -138,7 +142,7 @@ def unet(numLabels:int, pretrained_weights = False,input_size = (256,256,1)):
     if(G == 1):
         cpuModel = None
         model = Model(inputs = inputs, outputs = conv10)
-        model.compile(optimizer = Adam(lr = 1e-4), loss = WeightedBinaryCrossEntropy(1.5, 1), metrics = ['accuracy'])
+        model.compile(optimizer = Adam(lr = 1e-4), loss = WeightedBinaryCrossEntropy(2, 1), metrics = ['accuracy'])
         print(model.summary()) 
     else:
         with tf.device("/cpu:0"):
@@ -146,101 +150,85 @@ def unet(numLabels:int, pretrained_weights = False,input_size = (256,256,1)):
             print(cpuModel.summary())
         
         model = multi_gpu_model(cpuModel, gpus=G)
-        model.compile(optimizer = Adam(lr = 1e-4), loss = WeightedBinaryCrossEntropy(1.5, 1), metrics = ['accuracy'])
+        model.compile(optimizer = Adam(lr = 1e-4), loss = WeightedBinaryCrossEntropy(2, 1), metrics = ['accuracy'])
         
     return model, cpuModel
 
-    #if(pretrained_weights):
-    #	model.load_weights(pretrained_weights)
-
-def autoencoder1_2(input_size=(512, 512, 1)):
-
-    input_img = Input(shape=input_size)  # adapt this if using `channels_first` image data format
-
-    x = Conv2D(128, (3, 3), activation='linear', padding='same')(input_img)
-    x = LeakyReLU(0.2)(x)
-    x = BatchNormalization()(x)
-    x = Conv2D(128, (3, 3), activation='linear', padding='same')(input_img)
-    x = LeakyReLU(0.2)(x)
-    x = BatchNormalization()(x)
-    x = Conv2D(128, (3, 3), activation='linear', padding='same')(x)
-    x = LeakyReLU(0.2)(x)
-    x = BatchNormalization()(x)
-
-    x = MaxPooling2D((2, 2), padding='same')(x)
-
-    x = Conv2D(256, (3, 3), activation='linear', padding='same')(x)
-    x = LeakyReLU(0.2)(x)
-    x = BatchNormalization()(x)
-    x = Conv2D(256, (3, 3), activation='linear', padding='same')(x)
-    x = LeakyReLU(0.2)(x)
-    x = BatchNormalization()(x)
-    x = Conv2D(256, (3, 3), activation='linear', padding='same')(x)
-    x = LeakyReLU(0.2)(x)
-    x = BatchNormalization()(x)
-
-    x = MaxPooling2D((2, 2), padding='same')(x)
+def unet_3d (numLabels:int, pretrained_weights = False,input_size = (128,128,60,1)):
+    inputs = Input(input_size)
+    conv1 = Conv3D(32, 3, activation = 'linear', padding = 'same', kernel_initializer = 'glorot_normal', kernel_regularizer=regularizers.l2(beta))(inputs)
+    conv1 = LeakyReLU(alpha)(conv1)
+    conv1 = BatchNormalization()(conv1)
+    conv1 = Conv3D(64, 3, activation = 'linear', padding = 'same', kernel_initializer = 'glorot_normal', kernel_regularizer=regularizers.l2(beta))(conv1)
+    conv1 = LeakyReLU(alpha)(conv1)
+    conv1 = BatchNormalization()(conv1)
     
-    x = Conv2D(512, (3, 3), activation='linear', padding='same')(x)
-    x = LeakyReLU(0.2)(x)
-    x = BatchNormalization()(x)
-    x = Conv2D(512, (3, 3), activation='linear', padding='same')(x)
-    x = LeakyReLU(0.2)(x)
-    x = BatchNormalization()(x)
-    x = Conv2D(512, (3, 3), activation='linear', padding='same')(x)
-    x = LeakyReLU(0.2)(x)
-    x = BatchNormalization()(x)
-
-    x = MaxPooling2D((2, 2), padding='same')(x)
-
-    x = Conv2D(1024, (3, 3), activation='linear', padding='same')(x)
-    x = LeakyReLU(0.2)(x)
-    x = BatchNormalization()(x)
-    x = Conv2D(1024, (3, 3), activation='linear', padding='same')(x)
-    x = LeakyReLU(0.2)(x)
-    x = BatchNormalization()(x)
-    x = Conv2D(1024, (3, 3), activation='linear', padding='same')(x)
-    x = LeakyReLU(0.2)(x)
-    x = BatchNormalization()(x)
-
-    x = SpatialDropout2D(0.5)(x)
-
-    # at this point the representation is (4, 4, 8) i.e. 128-dimensional
-
-    x = Conv2D(512, (3, 3), activation='relu', padding='same')(x)
-    x = BatchNormalization()(x)
-    x = Conv2D(512, (3, 3), activation='relu', padding='same')(x)
-    x = BatchNormalization()(x)
-    x = Conv2D(512, (3, 3), activation='relu', padding='same')(x)
-    x = BatchNormalization()(x)
-
-    x = UpSampling2D((2, 2))(x)
-
-    x = Conv2D(256, (3, 3), activation='relu', padding='same')(x)
-    x = BatchNormalization()(x)
-    x = Conv2D(256, (3, 3), activation='relu', padding='same')(x)
-    x = BatchNormalization()(x)
-    x = Conv2D(256, (3, 3), activation='relu', padding='same')(x)
-    x = BatchNormalization()(x)
-
-    x = UpSampling2D((2, 2))(x)
-
-    x = Conv2D(128, (3, 3), activation='relu', padding='same')(x)
-    x = BatchNormalization()(x)
-    x = Conv2D(128, (3, 3), activation='relu', padding='same')(x)
-    x = BatchNormalization()(x)
-    x = Conv2D(128, (3, 3), activation='relu', padding='same')(x)
-    x = BatchNormalization()(x)
-
-    x = UpSampling2D((2, 2))(x)
-
-    decoded = Conv2D(1, 3, activation='sigmoid', padding='same')(x)
-
+    pool1 = MaxPooling3D(pool_size=(2, 2, 2))(conv1)
     
+    conv2 = Conv3D(64, 3, activation = 'linear', padding = 'same', kernel_initializer = 'glorot_normal', kernel_regularizer=regularizers.l2(beta))(pool1)
+    conv2 = LeakyReLU(alpha)(conv2)
+    conv2 = BatchNormalization()(conv2)
+    conv2 = Conv3D(128, 3, activation = 'linear', padding = 'same', kernel_initializer = 'glorot_normal', kernel_regularizer=regularizers.l2(beta))(conv2)
+    conv2 = LeakyReLU(alpha)(conv2)
+    conv2 = BatchNormalization()(conv2)
+    
+    pool2 = MaxPooling3D(pool_size=(2, 2, 2))(conv2)
+    
+    conv3 = Conv3D(128, 3, activation = 'linear', padding = 'same', kernel_initializer = 'glorot_normal', kernel_regularizer=regularizers.l2(beta))(pool2)
+    conv3 = LeakyReLU(alpha)(conv3)
+    conv3 = BatchNormalization()(conv3)
+    conv3 = Conv3D(256, 3, activation = 'linear', padding = 'same', kernel_initializer = 'glorot_normal', kernel_regularizer=regularizers.l2(beta))(conv3)
+    conv3 = LeakyReLU(alpha)(conv3)
+    conv3 = BatchNormalization()(conv3)
+    
+    pool3 = MaxPooling3D(pool_size=(2, 2, 2))(conv3)
+    
+    conv4 = Conv3D(256, 3, activation = 'linear', padding = 'same', kernel_initializer = 'glorot_normal', kernel_regularizer=regularizers.l2(beta))(pool3)
+    conv4 = LeakyReLU(alpha)(conv4)
+    conv4 = BatchNormalization()(conv4)
+    conv4 = Conv3D(512, 3, activation = 'linear', padding = 'same', kernel_initializer = 'glorot_normal', kernel_regularizer=regularizers.l2(beta))(conv4)
+    conv4 = LeakyReLU(alpha)(conv4)
+    conv4 = BatchNormalization()(conv4)
+    drop4 = Dropout(0.5)(conv4)
+
+    up5 = UpSampling3D(size = (2, 2, 2))(drop4)
+    up5 = Conv2D(512, 2, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal', kernel_regularizer=regularizers.l2(beta))(up5)
+    up5 = BatchNormalization()(up5)
+
+    merge5 = concatenate([conv3,up5], axis = 4)
+    conv5 = Conv3D(256, 3, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal', kernel_regularizer=regularizers.l2(beta))(merge5)
+    conv5 = BatchNormalization()(conv5)
+    conv5 = Conv3D(256, 3, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal', kernel_regularizer=regularizers.l2(beta))(conv5)
+    conv5 = BatchNormalization()(conv5)
+
+    up6 = UpSampling3D(size = (2, 2, 2))(conv5)
+    up6 = Conv3D(256, 2, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal', kernel_regularizer=regularizers.l2(beta))(up6)
+    up6 = BatchNormalization()(up6)
+
+    merge6 = concatenate([conv2,up6], axis = 4)
+    conv6 = Conv3D(128, 3, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal', kernel_regularizer=regularizers.l2(beta))(merge6)
+    conv6 = BatchNormalization()(conv6)
+    conv6 = Conv3D(128, 3, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal', kernel_regularizer=regularizers.l2(beta))(conv6)
+    conv6 = BatchNormalization()(conv6)
+
+    up7 = UpSampling3D(size = (2, 2, 2))(conv6)
+    up7 = Conv3D(128, 2, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal', kernel_regularizer=regularizers.l2(beta))(up7)
+    up7 = BatchNormalization()(up7)
+    merge7 = concatenate([conv1,up7], axis = 4)
+    conv7 = Conv3D(64, 3, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal', kernel_regularizer=regularizers.l2(beta))(merge7)
+    conv7 = BatchNormalization()(conv7)
+    conv7 = Conv3D(64, 3, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal', kernel_regularizer=regularizers.l2(beta))(conv7)
+    conv7 = BatchNormalization()(conv7)
+
+    conv7 = Conv3D(numLabels, 3, activation = 'relu', padding = 'same', kernel_initializer = 'glorot_normal', kernel_regularizer=regularizers.l2(beta))(conv7)
+    conv7 = BatchNormalization()(conv7)
+
+    conv8 = Conv3D(numLabels, 1, activation = 'sigmoid')(conv7)
+
     if(G == 1):
         cpuModel = None
-        model = Model(inputs = input_img, outputs = decoded)
-        model.compile(optimizer='RMSprop', loss='mean_squared_error')
+        model = Model(inputs = inputs, outputs = conv10)
+        model.compile(optimizer = Adam(lr = 1e-4), loss = WeightedBinaryCrossEntropy(1.5, 1), metrics = ['accuracy'])
         print(model.summary()) 
     else:
         with tf.device("/cpu:0"):
@@ -248,5 +236,6 @@ def autoencoder1_2(input_size=(512, 512, 1)):
             print(cpuModel.summary())
         
         model = multi_gpu_model(cpuModel, gpus=G)
-        model.compile(optimizer='RMSprop', loss='mean_squared_error')
+        model.compile(optimizer = Adam(lr = 1e-4), loss = WeightedBinaryCrossEntropy(1.5, 1), metrics = ['accuracy'])
+        
     return model, cpuModel
