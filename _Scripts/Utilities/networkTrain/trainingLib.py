@@ -102,14 +102,15 @@ def createTrainingData(dicomPaths:dict, maskPaths:dict, sortingDirection:int, ti
         print ("Successfully created the directory %s " % trainingMaskPath)
     
     dicomVol, maskVol = getDataArray(dicomPaths, maskPaths, sortingDirection)
-    slice_count = 0
-
     dicomTrainArray = None
     maskTrainArray = None
+    slice_size_list = np.zeros(len(dicomVol))
 
+    counter = 0
     for dataId in dicomVol:
         print("Processing data series", dataId)
 
+        # Make empty volumes for dicoms and masks
         dicomTrainArrayTemp = np.zeros( (len(dicomVol[dataId]),) + (512, 512) )
         maskTrainArrayTemp = np.zeros( (len(dicomVol[dataId]),) + (512, 512, 3) )
 
@@ -125,8 +126,7 @@ def createTrainingData(dicomPaths:dict, maskPaths:dict, sortingDirection:int, ti
             mask = Image.fromarray( maskVol[dataId][i], 'RGB')
             mask = mask.resize((512, 512), 0)
             maskTrainArrayTemp[i] = mask
-
-
+        
         if(dicomTrainArray is None):
             dicomTrainArray = dicomTrainArrayTemp
             maskTrainArray = maskTrainArrayTemp
@@ -135,17 +135,21 @@ def createTrainingData(dicomPaths:dict, maskPaths:dict, sortingDirection:int, ti
             dicomTrainArray = np.concatenate((dicomTrainArray, dicomTrainArrayTemp))
             maskTrainArray = np.concatenate((maskTrainArray, maskTrainArrayTemp))
         
-        print(dicomTrainArray.shape, maskTrainArray.shape)
-    
+        slice_size_list[counter] = dicomTrainArrayTemp.shape[0]
+        counter += 1
+        
     dicomTrainArray = dicomTrainArray.reshape(dicomTrainArray.shape + (1,))
-    print(dicomTrainArray.shape)
+    print(dicomTrainArray.shape, maskTrainArray.shape)
+    
     dicom_output_name = trainingImagePath + "/dicoms.npy" 
     mask_output_name = trainingMaskPath + "/masks.npy" 
+    size_output_name = trainingMaskPath + "/size.npy" 
 
     np.save(dicom_output_name, dicomTrainArray)
     np.save(mask_output_name, mask_output_name)
+    np.save(size_output_name, slice_size_list)
 
-    return (dicomTrainArray, maskTrainArray)
+    return (dicomTrainArray, maskTrainArray, slice_size_list)
 
     '''
         black_mask = 0
@@ -317,82 +321,49 @@ def combineTiles(inputpath:str, tileN:int):
             mri_img.save(image_output_name)
             sliceCount += 1
 
-def create3dTrainingData():
-    systemTempPath = "./tmp"
-    
-    try:
-        os.mkdir(systemTempPath)
-    except OSError:
-        print ("Creation of the directory %s failed" % systemTempPath)
-    else:
-        print ("Successfully created the directory %s " % systemTempPath)
+def create3dTrainingData(masterDicomVolume, maskVolume, sizeList, cubeSize=(64, 64, 64, 1)):
 
-    trainingImagePath = "./tmp/trainingImage"
+    # Make a empth training volume object 
+    trainingData = None
+    curSlice = 0
+    sizeList = sizeList.astype(int)
     
-    try:
-        os.mkdir(trainingImagePath)
-    except OSError:
-        print ("Creation of the directory %s failed" % trainingImagePath)
-    else:
-        print ("Successfully created the directory %s " % trainingImagePath)
+    for i in range(len(sizeList)):
+        # Select one single volume to work on
+        dicomVolume = masterDicomVolume[curSlice:curSlice + sizeList[i]]
+        curSlice += curSlice + sizeList[i]
+        volumeSize =  dicomVolume.shape
+        # Get a list of the corrdinates of all smaller cubes' starting corner 
+        startCorCube = np.mgrid[0:volumeSize[0],0:volumeSize[1],0:volumeSize[2]]
+        startCor = np.stack((startCorCube[0], startCorCube[1], startCorCube[2]), axis=3)
+        startCorSample = startCor[::20, ::80, ::80]
+        startCorSample = np.reshape(startCorSample, (startCorSample.shape[0] * startCorSample.shape[1] * startCorSample.shape[2], 3))
+        trainingDataTemp = np.zeros((startCorSample.shape[0], cubeSize[0]*cubeSize[1], cubeSize[2], cubeSize[3]))
+
+        # For each smaller boxed, fill it with data
+        for i in range(len(startCorSample)):
+            start = startCorSample[i]
+            sampleCube = np.zeros(cubeSize)
+            targetShape = dicomVolume[start[0]:start[0]+cubeSize[0], start[1]:start[1]+cubeSize[1], start[2]:start[2]+cubeSize[2]].shape
+
+            if(targetShape != cubeSize):
+                sampleCube[:targetShape[0], :targetShape[1], :targetShape[2]] = dicomVolume[start[0]:start[0]+cubeSize[0], start[1]:start[1]+cubeSize[1], start[2]:start[2]+cubeSize[2]]
+            else:
+                sampleCube = dicomVolume[start[0]:start[0]+cubeSize[0], start[1]:start[1]+cubeSize[1], start[2]:start[2]+cubeSize[2]]
+            trainingDataTemp[i] = np.reshape(sampleCube, (cubeSize[0] * cubeSize[1], cubeSize[2], 1))
         
-    trainingMaskPath = "./tmp/trainingMask"
+        if(trainingData is None):
+            trainingData = trainingDataTemp  
+        else:
+            trainingData = np.concatenate((trainingData, trainingDataTemp))
+        print(trainingData.shape)
+
+
+    return trainingData
+
+
+
     
-    try:
-        os.mkdir(trainingMaskPath)
-    except OSError:
-        print ("Creation of the directory %s failed" % trainingMaskPath)
-    else:
-        print ("Successfully created the directory %s " % trainingMaskPath)
-    
-    dicomVol, maskVol = getDataArray(dicomPaths, maskPaths, sortingDirection)
-    slice_count = 0
-
-    for dataId in dicomVol:
-        print("Processing data series", dataId)
-
-        black_mask = 0
-        white_mask = 0
-        
-        for image, mask in zip(dicomVol[dataId], maskVol[dataId]):
-            image.file_meta.TransferSyntaxUID = pydicom.uid.ImplicitVRLittleEndian
-            shape_image = image.pixel_array.shape
-            
-            # Convert to float to avoid overflow or underflow losses.
-            image_image_2d = image.pixel_array.astype(float)
-
-            # Rescaling grey scale between 0-255
-            image_2d_scaled = (np.maximum(image_image_2d,0) / image_image_2d.max()) * 255.0
-
-            # Convert to uint
-            image_2d_scaled = np.uint8(image_2d_scaled)
-
-            tileSmri = int(image_2d_scaled.shape[0]/tileN)
-            tileSmask = int(mask.shape[0]/tileN)
-        
-            for i in range(tileN):
-                for j in range(tileN):
-                    mri_tile = image_2d_scaled[i*tileSmri:(i+1)*tileSmri, j*tileSmri:(j+1)*tileSmri]
-                    mask_tile = mask[i*tileSmask:(i+1)*tileSmask, j*tileSmask:(j+1)*tileSmask]
-                    
-                    if (np.any(mask_tile)):
-                        white_mask += 1
-                    else:
-                        black_mask += 1
-                    
-                    image_output_name = trainingImagePath + "/" + format(slice_count, '05d') + ".png"
-                    # Write the PNG file
-                    mri_img = Image.fromarray(mri_tile, 'L')
-                    mri_img.save(image_output_name)
-
-                    shape_mask = mask.shape
-                    mask_img = Image.fromarray(mask_tile)
-                    mask_output_name = trainingMaskPath + "/" + format(slice_count, '05d') + ".png"
-                    mask_img.save(mask_output_name)
-
-                    slice_count += 1
-            
-        print(black_mask, white_mask)
 
 
 
